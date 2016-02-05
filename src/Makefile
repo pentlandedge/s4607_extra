@@ -17,7 +17,8 @@
 
 # code to compile
 SOURCE = \
-    coord.erl
+    coord.erl \
+    tgt_stats.erl
     
 # Where include files are stored ".hrl"
 EFLAGS = -I../include 
