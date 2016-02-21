@@ -52,8 +52,25 @@ extract(PacketList) when is_list(PacketList) ->
                     % Create a key/value list of the required parameters.
                     Props = [KV1, KV2, KV3, KV4, KV5, KV6, KV7, KV8, KV9, KV10],
 
+                    % Check to see if there are any target reports.
+                    TRC = dwell:get_target_report_count(SegData),
+                    EM = dwell:get_existence_mask(SegData),
+
+                    % If there are any targets then convert each to a dict.
+                    Props2 = case TRC of
+                        0 ->
+                            Props;
+                        _ -> 
+                            Tgts = dwell:get_targets(SegData),
+                            F = fun(TR) ->
+                                    tgt_report:to_dict(TR, EM)
+                                end,
+                            TgtsVal = lists:map(F, Tgts),
+                            [{targets, TgtsVal}|Props]
+                    end,
+                            
                     % Turn it into a dictionary.
-                    DwellParams = dict:from_list(Props),
+                    DwellParams = dict:from_list(Props2),
 
                     % Prepend to the list of dwells
                     NewDwellList = [DwellParams|DL],
