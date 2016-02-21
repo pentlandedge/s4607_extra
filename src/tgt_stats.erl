@@ -17,18 +17,6 @@
 
 -export([extract/1]).
 
--record(dwell_stats, {
-    mission_time, 
-    dwell_time, 
-    target_report_count,
-    sensor_lat,
-    sensor_lon,
-    sensor_alt,
-    dwell_center_lat, 
-    dwell_center_lon, 
-    dwell_range_he, 
-    dwell_angle_he}).
-    
 -record(stat_acc, {ref_time, dwell_list}).
 
 %% Function to extract the most useful fields relating to targets present in
@@ -49,23 +37,26 @@ extract(PacketList) when is_list(PacketList) ->
                     NewRef = mission:get_time(SegData), 
                     AccStats#stat_acc{ref_time = NewRef};
                 dwell ->
-                    % Extract the most interesting fields from the dwell 
-                    % and note the most recent reference time from the 
-                    % mission segment.
-                    DS = #dwell_stats{
-                        mission_time = RT,
-                        dwell_time = dwell:get_dwell_time(SegData),
-                        target_report_count = dwell:get_target_report_count(SegData),
-                        sensor_lat = dwell:get_sensor_lat(SegData),
-                        sensor_lon = dwell:get_sensor_lon(SegData),
-                        sensor_alt = dwell:get_sensor_alt(SegData),
-                        dwell_center_lat = dwell:get_dwell_center_lat(SegData), 
-                        dwell_center_lon = dwell:get_dwell_center_lon(SegData), 
-                        dwell_range_he = dwell:get_dwell_range_half_extent(SegData), 
-                        dwell_angle_he = dwell:get_dwell_angle_half_extent(SegData)},
+                    % Extract all of the parameters of interest.
+                    KV1 = {mission_time, RT},
+                    KV2 = {target_report_count, dwell:get_target_report_count(SegData)},
+                    KV3 = {target_report_count, dwell:get_target_report_count(SegData)},
+                    KV4 = {sensor_lat, dwell:get_sensor_lat(SegData)},
+                    KV5 = {sensor_lon, dwell:get_sensor_lon(SegData)},
+                    KV6 = {sensor_alt, dwell:get_sensor_alt(SegData)},
+                    KV7 = {dwell_center_lat, dwell:get_dwell_center_lat(SegData)}, 
+                    KV8 = {dwell_center_lon, dwell:get_dwell_center_lon(SegData)}, 
+                    KV9 = {dwell_range_he, dwell:get_dwell_range_half_extent(SegData)}, 
+                    KV10 = {dwell_angle_he, dwell:get_dwell_angle_half_extent(SegData)},
+
+                    % Create a key/value list of the required parameters.
+                    Props = [KV1, KV2, KV3, KV4, KV5, KV6, KV7, KV8, KV9, KV10],
+
+                    % Turn it into a dictionary.
+                    DwellParams = dict:from_list(Props),
 
                     % Prepend to the list of dwells
-                    NewDwellList = [DS|DL],
+                    NewDwellList = [DwellParams|DL],
                     AccStats#stat_acc{dwell_list = NewDwellList}
             end
         end,
