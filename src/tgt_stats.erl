@@ -40,17 +40,16 @@ extract(PacketList) when is_list(PacketList) ->
                     % Extract all of the parameters of interest.
                     KV1 = {mission_time, RT},
                     KV2 = {target_report_count, dwell:get_target_report_count(SegData)},
-                    KV3 = {target_report_count, dwell:get_target_report_count(SegData)},
-                    KV4 = {sensor_lat, dwell:get_sensor_lat(SegData)},
-                    KV5 = {sensor_lon, dwell:get_sensor_lon(SegData)},
-                    KV6 = {sensor_alt, dwell:get_sensor_alt(SegData)},
-                    KV7 = {dwell_center_lat, dwell:get_dwell_center_lat(SegData)}, 
-                    KV8 = {dwell_center_lon, dwell:get_dwell_center_lon(SegData)}, 
-                    KV9 = {dwell_range_he, dwell:get_dwell_range_half_extent(SegData)}, 
-                    KV10 = {dwell_angle_he, dwell:get_dwell_angle_half_extent(SegData)},
+                    KV3 = {sensor_lat, dwell:get_sensor_lat(SegData)},
+                    KV4 = {sensor_lon, dwell:get_sensor_lon(SegData)},
+                    KV5 = {sensor_alt, dwell:get_sensor_alt(SegData)},
+                    KV6 = {dwell_center_lat, dwell:get_dwell_center_lat(SegData)}, 
+                    KV7 = {dwell_center_lon, dwell:get_dwell_center_lon(SegData)}, 
+                    KV8 = {dwell_range_he, dwell:get_dwell_range_half_extent(SegData)}, 
+                    KV9 = {dwell_angle_he, dwell:get_dwell_angle_half_extent(SegData)},
 
                     % Create a key/value list of the required parameters.
-                    Props = [KV1, KV2, KV3, KV4, KV5, KV6, KV7, KV8, KV9, KV10],
+                    Props = [KV1, KV2, KV3, KV4, KV5, KV6, KV7, KV8, KV9],
 
                     % Check to see if there are any target reports.
                     TRC = dwell:get_target_report_count(SegData),
