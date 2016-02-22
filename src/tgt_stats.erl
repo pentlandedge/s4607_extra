@@ -21,6 +21,9 @@
 
 %% Function to extract the most useful fields relating to targets present in
 %% a list of decoded s4607 packets.
+%% Picks out the reference time from each passing mission segment and stores
+%% it in each representation of a dwell segment.
+%% Returns a list of dictionaries.
 extract(PacketList) when is_list(PacketList) ->
     % Only interested in mission and dwell segments.
     Segs = s4607:get_segments_by_type([mission, dwell], PacketList),
@@ -37,39 +40,11 @@ extract(PacketList) when is_list(PacketList) ->
                     NewRef = mission:get_time(SegData), 
                     AccStats#stat_acc{ref_time = NewRef};
                 dwell ->
-                    % Extract all of the parameters of interest.
-                    KV1 = {mission_time, RT},
-                    KV2 = {target_report_count, dwell:get_target_report_count(SegData)},
-                    KV3 = {sensor_lat, dwell:get_sensor_lat(SegData)},
-                    KV4 = {sensor_lon, dwell:get_sensor_lon(SegData)},
-                    KV5 = {sensor_alt, dwell:get_sensor_alt(SegData)},
-                    KV6 = {dwell_center_lat, dwell:get_dwell_center_lat(SegData)}, 
-                    KV7 = {dwell_center_lon, dwell:get_dwell_center_lon(SegData)}, 
-                    KV8 = {dwell_range_he, dwell:get_dwell_range_half_extent(SegData)}, 
-                    KV9 = {dwell_angle_he, dwell:get_dwell_angle_half_extent(SegData)},
-
-                    % Create a key/value list of the required parameters.
-                    Props = [KV1, KV2, KV3, KV4, KV5, KV6, KV7, KV8, KV9],
-
-                    % Check to see if there are any target reports.
-                    TRC = dwell:get_target_report_count(SegData),
-                    EM = dwell:get_existence_mask(SegData),
-
-                    % If there are any targets then convert each to a dict.
-                    Props2 = case TRC of
-                        0 ->
-                            Props;
-                        _ -> 
-                            Tgts = dwell:get_targets(SegData),
-                            F = fun(TR) ->
-                                    tgt_report:to_dict(TR, EM)
-                                end,
-                            TgtsVal = lists:map(F, Tgts),
-                            [{targets, TgtsVal}|Props]
-                    end,
-                            
                     % Turn it into a dictionary.
-                    DwellParams = dict:from_list(Props2),
+                    DwellDict = dwell:to_dict(SegData),
+
+                    % Add the mission time.
+                    DwellParams = dict:store(mission_time, RT, DwellDict),
 
                     % Prepend to the list of dwells
                     NewDwellList = [DwellParams|DL],
