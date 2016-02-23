@@ -17,7 +17,9 @@
 
 # code to compile
 SOURCE = \
+    all_tests.erl \
     coord.erl \
+    coord_tests.erl \
     tgt_stats.erl
     
 # Where include files are stored ".hrl"
