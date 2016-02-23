@@ -15,7 +15,7 @@
 %%
 -module(coord).
 
--export([lla_to_ecef/1]).
+-export([lla_to_ecef/1, deg_to_rad/1]).
 
 %% WGS84 constants.
 -define(WGS84_A, 6378137).
@@ -24,6 +24,10 @@
 %% Function to convert from Lat, Lon, Alt to ECEF format
 lla_to_ecef({Lat,Lon,Alt}) ->
 
+    % Convert the Lat, Lon into radians.
+    LatRad = deg_to_rad(Lat),
+    LonRad = deg_to_rad(Lon),
+
     % Need to check that this height is from the correct reference.
     H = Alt,
 
@@ -31,10 +35,10 @@ lla_to_ecef({Lat,Lon,Alt}) ->
     Bsquared = ?WGS84_B * ?WGS84_B,
     Esquared = (Asquared - Bsquared) / Asquared, 
 
-    SinLat = math:sin(Lat),
-    CosLat = math:cos(Lat),
-    SinLon = math:sin(Lon),
-    CosLon = math:cos(Lon),
+    SinLat = math:sin(LatRad),
+    CosLat = math:cos(LatRad),
+    SinLon = math:sin(LonRad),
+    CosLon = math:cos(LonRad),
 
     % Calculate the radius of curvature
     N = ?WGS84_A / math:sqrt(1 - Esquared * SinLat * SinLat),
@@ -46,4 +50,6 @@ lla_to_ecef({Lat,Lon,Alt}) ->
 
     {X, Y, Z}.
 
+deg_to_rad(Deg) ->
+    Deg * math:pi() / 180.
 
