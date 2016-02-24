@@ -23,11 +23,31 @@ coord_test_() ->
     [lla_to_ecef_checks()].
 
 lla_to_ecef_checks() ->
+    % Start with a point on the equator.
     {X1,Y1,Z1} = coord:lla_to_ecef({0,0,0}),
 
-    [?_assert(almost_equal(6378137.0, X1, 0.001)),
+    % Try a point in the northern hemisphere, west of the dateline.
+    {X2,Y2,Z2} = coord:lla_to_ecef({45,350,1000}),
+
+    % Try a point in the southern hemisphere, east of the dateline, height 
+    % below the ellipsoid.
+    {X3,Y3,Z3} = coord:lla_to_ecef({-45,150,-300}),
+
+    % Try a point as far south as we can go.
+    {X4,Y4,Z4} = coord:lla_to_ecef({-180,0.0,0.0}),
+
+    [?_assert(almost_equal(6378137.0, X1, 0.1)),
      ?_assert(almost_equal(0.0, Y1, 0.001)),
-     ?_assert(almost_equal(0.0, Z1, 0.001))].
+     ?_assert(almost_equal(0.0, Z1, 0.001)),
+     ?_assert(almost_equal(4449655, X2, 1)),
+     ?_assert(almost_equal(-784594, Y2, 1)),
+     ?_assert(almost_equal(4488056, Z2, 1)),
+     ?_assert(almost_equal(-3912165, X3, 1)),
+     ?_assert(almost_equal(2258689, Y3, 1)),
+     ?_assert(almost_equal(-4487136, Z3, 1)),
+     ?_assert(almost_equal(-6378137, X4, 1)),
+     ?_assert(almost_equal(0.0, Y4, 0.001)),
+     ?_assert(almost_equal(0.0, Z4, 0.001))].
 
 %% Utility function to compare whether floating point values are within a 
 %% specified range.
