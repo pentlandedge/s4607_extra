@@ -20,4 +20,17 @@
 
 %% Define a test generator function to run all the tests. 
 coord_test_() ->
-    [].
+    [lla_to_ecef_checks()].
+
+lla_to_ecef_checks() ->
+    {X1,Y1,Z1} = coord:lla_to_ecef({0,0,0}),
+
+    [?_assert(almost_equal(6378137.0, X1, 0.001)),
+     ?_assert(almost_equal(0.0, Y1, 0.001)),
+     ?_assert(almost_equal(0.0, Z1, 0.001))].
+
+%% Utility function to compare whether floating point values are within a 
+%% specified range.
+almost_equal(V1, V2, Delta) ->
+    abs(V1 - V2) =< Delta.
+ 

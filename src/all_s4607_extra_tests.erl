@@ -14,7 +14,7 @@
 %% under the License.
 %%
 
--module(all_tests).
+-module(all_s4607_extra_tests).
 
 -include_lib("eunit/include/eunit.hrl").
 

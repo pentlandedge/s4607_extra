@@ -17,7 +17,7 @@
 
 # code to compile
 SOURCE = \
-    all_tests.erl \
+    all_s4607_extra_tests.erl \
     coord.erl \
     coord_tests.erl \
     tgt_stats.erl
