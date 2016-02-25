@@ -9,5 +9,5 @@ There is a function for converting Latitude, Longitude, Altitude triples (refere
 ```
 1> {X,Y,Z} = coord:lla_to_ecef({45,350,1000}).
 ```
-where {X,Y,Z} are bound to the ECEF coordinated following the conversion.
+where {X,Y,Z} are bound to the ECEF coordinates following the conversion.
 
