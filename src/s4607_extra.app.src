@@ -1,0 +1,14 @@
+{application, s4607_extra,
+ [
+  {description, "An Erlang s4607_extra library"},
+  {vsn, "1"},
+  {modules, [
+             s4607_extra
+            ]},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {env, []}
+ ]}.
