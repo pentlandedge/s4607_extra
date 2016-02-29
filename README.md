@@ -1,19 +1,24 @@
 # s4607_extra
-Extra utilities for working with Stanag 4607 data that don't really belong in the core library (s4607). As an example, a useful query function to extract a particular subset of fields from the hierarchical packet structure would belong here not in the core.
+Extra utilities for working with Stanag 4607 data that don't really belong in the core library (s4607). As an example, a useful query function to extract a particular subset of fields from the hierarchical packet structure would belong here not in the core. The project uses the rebar utility to manage builds and dependencies, so rebar must be available on the path.
 
 ## Dependencies
-This library is designed to work with s4607, and a compiled copy of this code is required. This dependency is not currently handled automatically, but will be in the future.
-
-## Building the library
-It is necessary to have Erlang installed, and the compiler erlc available on the path. The software can be built (on a Linux platform) by moving to the src directory and running make:
+This library is designed to work with s4607, and a compiled copy of this code is required. To fetch the dependency using rebar:
 ```
-# cd src
-# make
+# rebar get-deps
+```
+## Building the library
+It is necessary to have Erlang installed, and the compiler erlc available on the path. The software can be built (on a Linux platform) using rebar 
+```
+# rebar compile 
 ```
 ## Running interactively
-The library functions can be called from the Erlang shell. When starting the shell, it is necessary to supply the path to the ebin directories for both this library and the s4607 library on which it depends. From the root directory, the Erlang shell can be started as follows (the path to the s4607 library may need to be adjusted depending on where it has been compiled):
+The library functions can be called from the Erlang shell. When starting the shell, it is necessary to supply the path to the ebin directories for both this library and the s4607 library on which it depends. From the root directory, the most convenient way to start the Erlang shell and pass it the paths to the compiled files is using rebar:
 ```
-# erl -pa ebin -pa ../s4607/ebin
+# rebar shell 
+```
+which is the equivalent of running
+```
+# erl -pa ebin -pa deps/s4607/ebin
 ```
 ## Coordinate conversion
 There is a function for converting Latitude, Longitude, Altitude triples (referenced to the WGS ellipsoid) into ECEF (Earth Centred Earth Fixed) format. For example, from the Erlang prompt:
