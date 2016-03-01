@@ -27,3 +27,8 @@ There is a function for converting Latitude, Longitude, Altitude triples (refere
 ```
 where {X,Y,Z} are bound to the ECEF coordinates following the conversion.
 
+## Extracting target statistics
+For a number of applications, the most useful statistics are contained within the dwell segments (which incorporate target reports). However, the mission segment supplies the reference date which is used to as the base on which to apply the time offset in the dwell. This library provides a utility which extracts all of the dwell segments in a packet list, but notes the reference date from mission segments as they are encountered. All of the data is returned as a list of dictionaries where each item in the list corresponds to a dwell segment. To call it (on a PacketList extracted using the s4607 library):
+```
+1> DwellStats = tgt_stats:extract(PacketList).
+```
