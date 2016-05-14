@@ -15,7 +15,7 @@
 %%
 -module(tgt_stats).
 
--export([extract/1]).
+-export([extract/1, dweil_dicts_to_geojson/1]).
 
 -record(stat_acc, {ref_time, dwell_list}).
 
@@ -59,4 +59,15 @@ extract(PacketList) when is_list(PacketList) ->
     
     % Reverse the list to return it to chronological order.
     lists:reverse(Dwells).
+
+%% Function to convert a list of Dwell dictionaries (created by the extract/1
+%% function above) to a list of GeoJSON records suitable to passing to a 
+%% mapping client.
+dweil_dicts_to_geojson(DwellList) when is_list(DwellList) ->
+    lists:map(fun dwell_to_geojson/1, DwellList).
+
+%% Function to convert a single dwell dictionary structure to the GeoJSON
+%% form.
+dwell_to_geojson(_DwellDict) ->
+    ok.
 
