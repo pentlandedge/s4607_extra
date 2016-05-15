@@ -69,5 +69,7 @@ dwell_dicts_to_geojson(DwellList) when is_list(DwellList) ->
 %% Function to convert a single dwell dictionary structure to the GeoJSON
 %% form.
 dwell_to_geojson(_DwellDict) ->
-    jsx:encode([{<<"type">>,<<"feature_collection">>}]). 
+    jsx:encode([
+        {<<"type">>,<<"feature_collection">>}, 
+        {<<"features">>,[]}]). 
 
