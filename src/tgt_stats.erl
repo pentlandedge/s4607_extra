@@ -73,5 +73,5 @@ dwell_to_geojson(_DwellDict) ->
         {<<"type">>,<<"FeatureCollection">>}, 
         {<<"features">>,
             [[{<<"type">>, <<"Feature">>},
-             {<<"dummy2">>, 34.0}]]}]). 
+             {<<"properties">>, [{<<"time">>, <<"2014-09-10 09:42:26+01">>}]}]]}]). 
 
