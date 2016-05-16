@@ -70,7 +70,7 @@ dwell_dicts_to_geojson(DwellList) when is_list(DwellList) ->
 %% form.
 dwell_to_geojson(_DwellDict) ->
     jsx:encode([
-        {<<"type">>,<<"feature_collection">>}, 
+        {<<"type">>,<<"FeatureCollection">>}, 
         {<<"features">>,
             [[{<<"type">>, <<"Feature">>},
              {<<"dummy2">>, 34.0}]]}]). 
