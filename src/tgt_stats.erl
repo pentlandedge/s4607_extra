@@ -88,7 +88,14 @@ dwell_to_geojson(_DwellDict) ->
              {<<"geometry">>, [{<<"type">>, <<"Point">>},
                                {<<"coordinates">>, 
                                     [ -2.71, 55.9987, 1]}]
-              }
+             }
+            ],
+            [{<<"type">>, <<"Feature">>},
+             {<<"properties">>, [{<<"time">>, <<"2014-09-10 09:43:26+01">>}]},
+             {<<"geometry">>, [{<<"type">>, <<"Point">>},
+                               {<<"coordinates">>, 
+                                    [ -2.711, 55.9988, 1]}]
+             }
             ]]
         }
     ]). 
