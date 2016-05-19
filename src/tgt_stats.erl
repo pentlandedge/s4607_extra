@@ -75,27 +75,14 @@ dwell_to_geojson(_DwellDict) ->
     PtB = [-2.74, 56.015, 1],
     PtC = [-2.675, 56.015, 1],
     PtD = [-2.68, 55.985, 1],
-     
+    
+    DwellArea = dwell_area_to_geojson(TimeStr, PtA, PtB, PtC, PtD),
+    Tgt1 = gen_tgt_geojson("2014-09-10 09:42:26+01", 55.9987, -2.71, 1),            
+    Tgt2 = gen_tgt_geojson("2014-09-10 09:43:26+01", 55.9988, -2.711, 1),
+
     jsx:encode([
         {<<"type">>,<<"FeatureCollection">>}, 
-        {<<"features">>,
-            [
-            %[{<<"type">>, <<"Feature">>},
-            %  {<<"properties">>, [{<<"time">>, <<"2014-09-10 09:42:26+01">>}]},
-            %  {<<"geometry">>, [{<<"type">>, <<"Polygon">>},
-            %                    {<<"coordinates">>, [[
-            %                        [-2.735, 55.985, 1],
-            %                        [-2.74, 56.015, 1],
-            %                        [-2.675, 56.015, 1],
-            %                        [-2.68, 55.985, 1],
-            %                        [-2.735, 55.985, 1]]]}]
-            %  }
-            %],
-            dwell_area_to_geojson(TimeStr, PtA, PtB, PtC, PtD),
-            gen_tgt_geojson("2014-09-10 09:42:26+01", 55.9987, -2.71, 1),            
-            gen_tgt_geojson("2014-09-10 09:43:26+01", 55.9988, -2.711, 1)
-            ]
-        }
+        {<<"features">>, [DwellArea, Tgt1, Tgt2]}
     ]). 
 
 dwell_area_to_geojson(TimeStr, PtA, PtB, PtC, PtD) 
