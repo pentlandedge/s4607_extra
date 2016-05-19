@@ -70,25 +70,44 @@ dwell_dicts_to_geojson(DwellList) when is_list(DwellList) ->
 %% Function to convert a single dwell dictionary structure to the GeoJSON
 %% form.
 dwell_to_geojson(_DwellDict) ->
+    TimeStr = "2014-09-10 09:42:26+01",
+    PtA = [-2.735, 55.985, 1],
+    PtB = [-2.74, 56.015, 1],
+    PtC = [-2.675, 56.015, 1],
+    PtD = [-2.68, 55.985, 1],
+     
     jsx:encode([
         {<<"type">>,<<"FeatureCollection">>}, 
         {<<"features">>,
-            [[{<<"type">>, <<"Feature">>},
-              {<<"properties">>, [{<<"time">>, <<"2014-09-10 09:42:26+01">>}]},
-              {<<"geometry">>, [{<<"type">>, <<"Polygon">>},
-                                {<<"coordinates">>, [[
-                                    [-2.735, 55.985, 1],
-                                    [-2.74, 56.015, 1],
-                                    [-2.675, 56.015, 1],
-                                    [-2.68, 55.985, 1],
-                                    [-2.735, 55.985, 1]]]}]
-              }
-            ],
+            [
+            %[{<<"type">>, <<"Feature">>},
+            %  {<<"properties">>, [{<<"time">>, <<"2014-09-10 09:42:26+01">>}]},
+            %  {<<"geometry">>, [{<<"type">>, <<"Polygon">>},
+            %                    {<<"coordinates">>, [[
+            %                        [-2.735, 55.985, 1],
+            %                        [-2.74, 56.015, 1],
+            %                        [-2.675, 56.015, 1],
+            %                        [-2.68, 55.985, 1],
+            %                        [-2.735, 55.985, 1]]]}]
+            %  }
+            %],
+            dwell_area_to_geojson(TimeStr, PtA, PtB, PtC, PtD),
             gen_tgt_geojson("2014-09-10 09:42:26+01", 55.9987, -2.71, 1),            
             gen_tgt_geojson("2014-09-10 09:43:26+01", 55.9988, -2.711, 1)
             ]
         }
     ]). 
+
+dwell_area_to_geojson(TimeStr, PtA, PtB, PtC, PtD) 
+    when is_list(PtA), is_list(PtB), is_list(PtC), is_list(PtD) ->
+    [{<<"type">>, <<"Feature">>},
+        {<<"properties">>, [{<<"time">>, list_to_binary(TimeStr)}]},
+        {<<"geometry">>, 
+            [{<<"type">>, <<"Polygon">>}, 
+                {<<"coordinates">>, [[PtA, PtB, PtC, PtD, PtA]]}
+            ]
+        }
+    ].
 
 gen_tgt_geojson(Timestamp, Lat, Lon, Alt) ->
     [{<<"type">>, <<"Feature">>},
