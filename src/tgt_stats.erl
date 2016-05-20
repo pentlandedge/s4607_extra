@@ -69,19 +69,19 @@ dwell_dicts_to_geojson(DwellList) when is_list(DwellList) ->
 %% Function to convert a single dwell dictionary structure to the GeoJSON
 %% form.
 dwell_to_geojson(_DwellDict) ->
+    % Dummy/hardcoded parameters for now.
     TimeStr = "2014-09-10 09:42:26+01",
-    PtA = [-2.735, 55.985],
-    PtB = [-2.74, 56.015],
-    PtC = [-2.675, 56.015],
-    PtD = [-2.68, 55.985],
+    DwellArea = {1,2,3,4},
+    SensorPos = {1,2,3},
+    {PtA, PtB, PtC, PtD} = dwell_area_to_polygon(DwellArea, SensorPos),
     
-    DwellArea = dwell_area_to_geojson(TimeStr, PtA, PtB, PtC, PtD),
+    DwellAreaGeo = dwell_area_to_geojson(TimeStr, PtA, PtB, PtC, PtD),
     Tgt1 = gen_tgt_geojson("2014-09-10 09:42:26+01", 55.9987, -2.71, 1),            
     Tgt2 = gen_tgt_geojson("2014-09-10 09:43:26+01", 55.9988, -2.711, 1),
 
     jsx:encode([
         {<<"type">>,<<"FeatureCollection">>}, 
-        {<<"features">>, [DwellArea, Tgt1, Tgt2]}
+        {<<"features">>, [DwellAreaGeo, Tgt1, Tgt2]}
     ]). 
 
 dwell_area_to_geojson(TimeStr, PtA, PtB, PtC, PtD) 
@@ -94,6 +94,16 @@ dwell_area_to_geojson(TimeStr, PtA, PtB, PtC, PtD)
             ]
         }
     ].
+
+%% @doc Function to convert the dwell area parameters into a bounding polygon
+%% that can be displayed.
+dwell_area_to_polygon(_DwellArea, _SensorPos) ->
+    % Hardcode these at present. Note they are in Lon, Lat pairs.
+    PtA = [-2.735, 55.985],
+    PtB = [-2.74, 56.015],
+    PtC = [-2.675, 56.015],
+    PtD = [-2.68, 55.985],
+    {PtA, PtB, PtC, PtD}.
 
 gen_tgt_geojson(Timestamp, Lat, Lon, Alt) ->
     [{<<"type">>, <<"Feature">>},
