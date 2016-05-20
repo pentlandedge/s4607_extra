@@ -15,8 +15,7 @@
 %%
 -module(tgt_stats).
 
--export([extract/1, dwell_dicts_to_geojson/1, dwell_to_geojson/1,
-    dwell_to_geojson_static/1]).
+-export([extract/1, dwell_dicts_to_geojson/1, dwell_to_geojson/1]).
 
 -record(stat_acc, {ref_time, dwell_list}).
 
@@ -103,35 +102,3 @@ gen_tgt_geojson(Timestamp, Lat, Lon, Alt) ->
                        {<<"coordinates">>, [Lon, Lat, Alt]}]}
     ]. 
 
-%% Legacy fixed points to use as an example.
-dwell_to_geojson_static(_DwellDict) ->
-    jsx:encode([
-        {<<"type">>,<<"FeatureCollection">>}, 
-        {<<"features">>,
-            [[{<<"type">>, <<"Feature">>},
-              {<<"properties">>, [{<<"time">>, <<"2014-09-10 09:42:26+01">>}]},
-              {<<"geometry">>, [{<<"type">>, <<"Polygon">>},
-                                {<<"coordinates">>, [[
-                                    [-2.735, 55.985, 1],
-                                    [-2.74, 56.015, 1],
-                                    [-2.675, 56.015, 1],
-                                    [-2.68, 55.985, 1],
-                                    [-2.735, 55.985, 1]]]}]
-              }
-            ],
-            [{<<"type">>, <<"Feature">>},
-             {<<"properties">>, [{<<"time">>, <<"2014-09-10 09:42:26+01">>}]},
-             {<<"geometry">>, [{<<"type">>, <<"Point">>},
-                               {<<"coordinates">>, 
-                                    [ -2.71, 55.9987, 1]}]
-             }
-            ],
-            [{<<"type">>, <<"Feature">>},
-             {<<"properties">>, [{<<"time">>, <<"2014-09-10 09:43:26+01">>}]},
-             {<<"geometry">>, [{<<"type">>, <<"Point">>},
-                               {<<"coordinates">>, 
-                                    [ -2.711, 55.9988, 1]}]
-             }
-            ]]
-        }
-    ]).
