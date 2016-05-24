@@ -15,7 +15,11 @@
 %%
 -module(tgt_stats).
 
--export([extract/1, dwell_dicts_to_geojson/1, dwell_to_geojson/1]).
+-export([
+    extract/1, 
+    dwell_dicts_to_geojson/1, 
+    dwell_to_geojson/1,
+    date_to_string/1]).
 
 -record(stat_acc, {ref_time, dwell_list}).
 
@@ -112,3 +116,7 @@ gen_tgt_geojson(Timestamp, Lat, Lon, Alt) ->
                        {<<"coordinates">>, [Lon, Lat, Alt]}]}
     ]. 
 
+%% Function to convert the reference date from the mission segment to a 
+%% string.
+date_to_string({Y,M,D}) ->
+    io_lib:format("~p-~2..0w-~2..0w",[Y,M,D]).
