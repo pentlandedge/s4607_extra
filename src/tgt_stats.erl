@@ -19,7 +19,7 @@
     extract/1, 
     dwell_dicts_to_geojson/1, 
     dwell_to_geojson/1,
-    date_to_string/1,
+    datetime_to_string/1,
     date_ms_to_datetime/2]).
 
 -record(stat_acc, {ref_time, dwell_list}).
@@ -119,10 +119,10 @@ gen_tgt_geojson(Timestamp, Lat, Lon, Alt) ->
 
 %% Function to convert the reference date from the mission segment to a 
 %% string.
-date_to_string({Y,M,D}) ->
-    io_lib:format("~p-~2..0w-~2..0w",[Y,M,D]).
+datetime_to_string({{Year,Month,Day},{Hours,Mins,Secs}}) ->
+    io_lib:format("~p-~2..0w-~2..0w ~2..0w:~2..0w:~2..0w",
+        [Year,Month,Day,Hours,Mins,Secs]).
     
-
 %% Function to convert the reference date from the mission segment and the
 %% offset in milliseconds contained in the dwell segment into a datetime 
 %% structure.
