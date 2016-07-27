@@ -32,3 +32,7 @@ For a number of applications, the most useful statistics are contained within th
 ```
 1> DwellStats = tgt_stats:extract(PacketList).
 ```
+
+## Converting target information to GeoJSON
+This is currently a work in progress. The aim is to convert the most useful fields from the target statistics structure into GeoJSON. GeoJSON is a standard format for exchanging geographical data, and can be consumed by various javascript mapping libraries. This should allow the presentation of Stanag 4607 target information in the browser. 
+
