@@ -120,8 +120,9 @@ gen_tgt_geojson(Timestamp, Lat, Lon, Alt) ->
 %% Function to convert the reference date from the mission segment to a 
 %% string.
 datetime_to_string({{Year,Month,Day},{Hours,Mins,Secs}}) ->
-    io_lib:format("~p-~2..0w-~2..0w ~2..0w:~2..0w:~2..0w",
-        [Year,Month,Day,Hours,Mins,Secs]).
+    Str = io_lib:format("~p-~2..0w-~2..0w ~2..0w:~2..0w:~2..0w",
+        [Year,Month,Day,Hours,Mins,Secs]),
+    lists:flatten(Str).
     
 %% Function to convert the reference date from the mission segment and the
 %% offset in milliseconds contained in the dwell segment into a datetime 
