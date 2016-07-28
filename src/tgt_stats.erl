@@ -75,14 +75,15 @@ dwell_dicts_to_geojson(DwellList) when is_list(DwellList) ->
 %% form.
 dwell_to_geojson(_DwellDict) ->
     % Dummy/hardcoded parameters for now.
-    TimeStr = "2014-09-10 09:42:26+01",
+    DateTime = {{2014,9,10},{9,42,26}},
+    TimeStr = datetime_to_string(DateTime),
     DwellArea = {1,2,3,4},
     SensorPos = {1,2,3},
     {PtA, PtB, PtC, PtD} = dwell_area_to_polygon(DwellArea, SensorPos),
     
     DwellAreaGeo = dwell_area_to_geojson(TimeStr, PtA, PtB, PtC, PtD),
-    Tgt1 = gen_tgt_geojson("2014-09-10 09:42:26+01", 55.9987, -2.71, 1),            
-    Tgt2 = gen_tgt_geojson("2014-09-10 09:43:26+01", 55.9988, -2.711, 1),
+    Tgt1 = gen_tgt_geojson(TimeStr, 55.9987, -2.71, 1),            
+    Tgt2 = gen_tgt_geojson(TimeStr, 55.9988, -2.711, 1),
 
     jsx:encode([
         {<<"type">>,<<"FeatureCollection">>}, 
