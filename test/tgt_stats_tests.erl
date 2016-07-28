@@ -38,5 +38,12 @@ extract_check1() ->
     % Extract the mission time.
     MissTime = dict:fetch(mission_time, DwellDict),
 
-    [?_assertEqual({2016, 7, 28}, MissTime)].
+    % Extract the dwell time.
+    DwellTime = dict:fetch(dwell_time, DwellDict),
+
+    % Convert to UTC (seconds precision).
+    DwellUTC = tgt_stats:date_ms_to_datetime(MissTime, DwellTime),
+
+    [?_assertEqual({2016, 7, 28}, MissTime),
+     ?_assertEqual({{2016, 7, 28},{0, 16, 40}}, DwellUTC)].
 
