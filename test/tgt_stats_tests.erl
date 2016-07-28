@@ -63,8 +63,8 @@ geojson_check1() ->
     % Next bit of the file should look like this.
     F2 = <<",\"features\":[{\"type\":\"Feature\",\"properties\":{\"time\":">>,
 
-    % This is the hardcoded dwell time.
-    DwellTime = <<"\"2014-09-10 09:42:26\"">>,
+    % This is the expected dwell time.
+    DwellTime = <<"\"2016-07-28 00:16:40\"">>,
 
     [?_assertEqual(<<"{\"type\":\"FeatureCollection\"">>, TypeStr),
      ?_assertEqual(F2, Text2),

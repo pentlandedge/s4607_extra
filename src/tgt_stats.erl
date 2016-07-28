@@ -73,10 +73,18 @@ dwell_dicts_to_geojson(DwellList) when is_list(DwellList) ->
 
 %% Function to convert a single dwell dictionary structure to the GeoJSON
 %% form.
-dwell_to_geojson(_DwellDict) ->
-    % Dummy/hardcoded parameters for now.
-    DateTime = {{2014,9,10},{9,42,26}},
-    TimeStr = datetime_to_string(DateTime),
+dwell_to_geojson(DwellDict) ->
+
+    % Extract the mission time.
+    MissTime = dict:fetch(mission_time, DwellDict),
+
+    % Extract the dwell time (given in ms offset from the mission time).
+    DwellTime = dict:fetch(dwell_time, DwellDict),
+
+    % Convert to UTC (seconds precision).
+    DwellUTC = tgt_stats:date_ms_to_datetime(MissTime, DwellTime),
+
+    TimeStr = datetime_to_string(DwellUTC),
     DwellArea = {1,2,3,4},
     SensorPos = {1,2,3},
     {PtA, PtB, PtC, PtD} = dwell_area_to_polygon(DwellArea, SensorPos),
