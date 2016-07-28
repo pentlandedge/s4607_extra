@@ -49,7 +49,8 @@ get_list1() ->
     % Create a packet with the new segment.
     DwellPacket = Gen([DwellSeg]),
 
-    [].
+    % Return the two packets as a list.
+    [MissionPacket, DwellPacket].
 
 %% Function to create a sample dwell with a single target report in it.
 one_target_dwell() ->

@@ -30,5 +30,13 @@ datetime_string_checks() ->
 
 extract_check1() ->
     PacketList = packet_list:get_list1(),
+    TgtStats = tgt_stats:extract(PacketList), 
+    
+    % Expect only a single dictionary to be returned.
+    [DwellDict] = TgtStats,
 
-    [?_assertEqual([], PacketList)].
+    % Extract the mission time.
+    MissTime = dict:fetch(mission_time, DwellDict),
+
+    [?_assertEqual({2016, 7, 28}, MissTime)].
+
