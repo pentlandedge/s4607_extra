@@ -20,10 +20,15 @@
 
 %% Define a test generator function to run all the tests. 
 tgt_stats_test_() ->
-    [datetime_string_checks()].
+    [datetime_string_checks(), extract_check1()].
 
 datetime_string_checks() ->
     DT = {{2016,7,27},{8,12,59}},
     TimeStr = tgt_stats:datetime_to_string(DT),
 
     [?_assertEqual("2016-07-27 08:12:59", TimeStr)].
+
+extract_check1() ->
+    PacketList = packet_list:get_list1(),
+
+    [?_assertEqual([], PacketList)].
