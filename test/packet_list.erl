@@ -22,4 +22,23 @@
 %% Packet List 1. Consists of a single mission segment and a single 
 %% dwell segment with a single target report.
 get_list1() ->
+    % List the parameters for the packet header (no need to set size).
+    PL = [{version, {3, 1}}, {nationality, "UK"}, {classification, top_secret}, 
+          {class_system, "UK"}, {platform_id, "Pico1"}, 
+          {mission_id, 16#11223344}, 
+          {job_id, 16#55667788}],
+
+    % Create a generator function
+    Gen = s4607:packet_generator(PL),
+
+    % Create a mission segment.
+    MS = mission:new("Drifter 1", "A1234", other, "Build 1", 2016, 7, 28),
+
+    % Create a complete segment with the header and payload.
+    MissionSeg = segment:new(mission, MS),
+
+    % Create a packet containing the mission segment
+    Pack = Gen([MissionSeg]),
+
     [].
+
