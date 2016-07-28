@@ -20,7 +20,7 @@
 
 %% Define a test generator function to run all the tests. 
 tgt_stats_test_() ->
-    [datetime_string_checks(), extract_check1()].
+    [datetime_string_checks(), extract_check1(), geojson_check1()].
 
 datetime_string_checks() ->
     DT = {{2016,7,27},{8,12,59}},
@@ -46,4 +46,27 @@ extract_check1() ->
 
     [?_assertEqual({2016, 7, 28}, MissTime),
      ?_assertEqual({{2016, 7, 28},{0, 16, 40}}, DwellUTC)].
+
+geojson_check1() ->
+    PacketList = packet_list:get_list1(),
+    TgtStats = tgt_stats:extract(PacketList), 
+    
+    % Expect only a single dictionary to be returned.
+    [DwellDict] = TgtStats,
+
+    % Convert it to GeoJSON format.
+    GJ = tgt_stats:dwell_to_geojson(DwellDict),
+
+    % Extract the first part of the GeoJSON containing type.
+    <<TypeStr:27/binary,Text2:52/binary,TimeStr:21/binary,_Rest/binary>> = GJ,
+
+    % Next bit of the file should look like this.
+    F2 = <<",\"features\":[{\"type\":\"Feature\",\"properties\":{\"time\":">>,
+
+    % This is the hardcoded dwell time.
+    DwellTime = <<"\"2014-09-10 09:42:26\"">>,
+
+    [?_assertEqual(<<"{\"type\":\"FeatureCollection\"">>, TypeStr),
+     ?_assertEqual(F2, Text2),
+     ?_assertEqual(DwellTime, TimeStr)].
 
