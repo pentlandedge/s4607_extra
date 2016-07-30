@@ -56,7 +56,7 @@ lla_to_ecef({Lat,Lon,Alt}) ->
 deg_to_rad(Deg) ->
     Deg * math:pi() / 180.
 
-%% Calculate the great circle distance between two points using the Haversine 
+%% Calculate the great circle distance between two points using the haversine 
 %% formula. Reference http://www.movable-type.co.uk/scripts/latlong.html.
 haversine_distance({Lat1, Lon1}, {Lat2, Lon2}) ->
     LatRad1 = deg_to_rad(Lat1), 
@@ -75,7 +75,6 @@ haversine_distance({Lat1, Lon1}, {Lat2, Lon2}) ->
 
     A = SinSqHalfDLat + math:cos(LatRad1) * math:cos(LatRad2) * SinSqHalfDLon, 
     C = 2 * math:atan2(math:sqrt(A), math:sqrt(1-A)),
-    %Distance = ?WGS84_A * C,
     Distance = ?EARTH_MEAN_RAD * C,
     Distance.
 
