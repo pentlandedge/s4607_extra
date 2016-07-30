@@ -84,9 +84,27 @@ dwell_to_geojson(DwellDict) ->
     % Convert to UTC (seconds precision).
     DwellUTC = tgt_stats:date_ms_to_datetime(MissTime, DwellTime),
 
+    % Convert the UTC timestamp to a string.
     TimeStr = datetime_to_string(DwellUTC),
-    DwellArea = {1,2,3,4},
-    SensorPos = {1,2,3},
+    
+    % Extract the parameters related to the dwell area from the segment.
+    DwellCentreLat = dict:fetch(dwell_center_lat, DwellDict),
+    DwellCentreLon = dict:fetch(dwell_center_lon, DwellDict),
+    DwellRangeHalfExtent = dict:fetch(dwell_range_half_extent, DwellDict),
+    DwellAngleHalfExtent = dict:fetch(dwell_angle_half_extent, DwellDict),
+
+    % Extract the sensor position paramters. We need these to be able to 
+    % make sense of the dwell angle parameters when calculating the dwell
+    % area extent on the ground.
+    SensorLat = dict:fetch(sensor_lat, DwellDict),
+    SensorLon = dict:fetch(sensor_lon, DwellDict),
+    SensorAlt = dict:fetch(sensor_alt, DwellDict),
+    
+    DwellArea = {DwellCentreLat, DwellCentreLon, 
+                 DwellRangeHalfExtent, DwellAngleHalfExtent},
+
+    SensorPos = {SensorLat, SensorLon, SensorAlt},
+
     {PtA, PtB, PtC, PtD} = dwell_area_to_polygon(DwellArea, SensorPos),
     
     DwellAreaGeo = dwell_area_to_geojson(TimeStr, PtA, PtB, PtC, PtD),
