@@ -129,6 +129,9 @@ dwell_area_to_geojson(TimeStr, PtA, PtB, PtC, PtD)
 
 %% @doc Function to convert the dwell area parameters into a bounding polygon
 %% that can be displayed.
+%% Ignore the altitude of the sensor for now and calculate the boundary 
+%% points by applying the haversine formula to give the distance between two
+%% Lat, Lon points along the arc of a great circle.
 dwell_area_to_polygon(_DwellArea, _SensorPos) ->
     % Hardcode these at present. Note they are in Lon, Lat pairs.
     PtA = [-2.735, 55.985],
