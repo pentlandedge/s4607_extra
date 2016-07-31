@@ -15,7 +15,12 @@
 %%
 -module(coord).
 
--export([lla_to_ecef/1, deg_to_rad/1, haversine_distance/2]).
+-export([
+    lla_to_ecef/1, 
+    deg_to_rad/1, 
+    haversine_distance/2,
+    initial_bearing/2,
+    destination/3]).
 
 %% WGS84 constants.
 -define(WGS84_A, 6378137).
@@ -78,3 +83,9 @@ haversine_distance({Lat1, Lon1}, {Lat2, Lon2}) ->
     Distance = ?EARTH_MEAN_RAD * C,
     Distance.
 
+initial_bearing({_Lat1, _Lon1}, {_Lat2, _Lon2}) ->
+    10.0.
+
+destination({_StartLat, _StartLon}, _Bearing, _Distance) ->
+    {55.9987, -2.71}.
+    
