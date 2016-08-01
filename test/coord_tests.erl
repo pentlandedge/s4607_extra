@@ -20,7 +20,7 @@
 
 %% Define a test generator function to run all the tests. 
 coord_test_() ->
-    [lla_to_ecef_checks(), haversine_checks()].
+    [lla_to_ecef_checks(), haversine_checks(), initial_bearing_checks()].
 
 lla_to_ecef_checks() ->
     % Start with a point on the equator.
@@ -55,6 +55,13 @@ haversine_checks() ->
     Dist = coord:haversine_distance(Pt1, Pt2),
 
     [?_assert(almost_equal(1514, Dist, 1))].
+
+initial_bearing_checks() ->
+    Pt1 = {55.9987, -2.71},
+    Pt2 = {56.001, -2.734},
+    Bearing = coord:initial_bearing(Pt1, Pt2),
+
+    [?_assert(almost_equal(279.735, Bearing, 0.001))].
 
 %% Utility function to compare whether floating point values are within a 
 %% specified range.

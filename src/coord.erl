@@ -61,6 +61,9 @@ lla_to_ecef({Lat,Lon,Alt}) ->
 deg_to_rad(Deg) ->
     Deg * math:pi() / 180.
 
+rad_to_deg(Rad) ->
+    Rad * 180 / math:pi().
+
 %% Calculate the great circle distance between two points using the haversine 
 %% formula. Reference http://www.movable-type.co.uk/scripts/latlong.html.
 haversine_distance({Lat1, Lon1}, {Lat2, Lon2}) ->
@@ -83,9 +86,30 @@ haversine_distance({Lat1, Lon1}, {Lat2, Lon2}) ->
     Distance = ?EARTH_MEAN_RAD * C,
     Distance.
 
-initial_bearing({_Lat1, _Lon1}, {_Lat2, _Lon2}) ->
-    10.0.
+%% Calculates the initial bearing on the great circle path from point 1 to 
+%% point 2.
+%% θ = atan2(sin Δλ ⋅ cos φ2 , cos φ1 ⋅ sin φ2 − sin φ1 ⋅ cos φ2 ⋅ cos Δλ)
+%% where λ = Lon, φ = Lat.
+%% Angles in radians.
+%% The output from the atan2 is converted from +-180 to 0-360 degrees.
+initial_bearing({Lat1, Lon1}, {Lat2, Lon2}) ->
+    LatRad1 = deg_to_rad(Lat1), 
+    LonRad1 = deg_to_rad(Lon1), 
+    LatRad2 = deg_to_rad(Lat2), 
+    LonRad2 = deg_to_rad(Lon2), 
+    
+    DeltaLon = LonRad2 - LonRad1, 
+    Y = math:sin(DeltaLon) * math:cos(LatRad2),
+    X = math:cos(LatRad1) * math:sin(LatRad2) - 
+        math:sin(LatRad1) * math:cos(LatRad2) * math:cos(DeltaLon),
 
+    RadBearing = math:atan2(Y, X),
+    DegBearing = rad_to_deg(RadBearing),
+    case DegBearing >= 0.0 of
+        true -> DegBearing;
+        _    -> DegBearing + 360.0
+    end.
+     
 destination({_StartLat, _StartLon}, _Bearing, _Distance) ->
     {55.9987, -2.71}.
     
