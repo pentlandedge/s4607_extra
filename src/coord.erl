@@ -110,6 +110,31 @@ initial_bearing({Lat1, Lon1}, {Lat2, Lon2}) ->
         _    -> DegBearing + 360.0
     end.
      
-destination({_StartLat, _StartLon}, _Bearing, _Distance) ->
-    {55.9987, -2.71}.
+%% Calculate the destination given a start point, bearing and distance along
+%% a great circle arc.
+%% From http://www.movable-type.co.uk/scripts/latlong.html
+%% φ2 = asin( sin φ1 ⋅ cos δ + cos φ1 ⋅ sin δ ⋅ cos θ )
+%% λ2 = λ1 + atan2( sin θ ⋅ sin δ ⋅ cos φ1, cos δ − sin φ1 ⋅ sin φ2 )
+%% where where  φ is latitude, λ is longitude, θ is the bearing (clockwise 
+%% from north), δ is the angular distance d/R; d being the distance travelled, 
+%% R the earth’s radius.
+destination({StartLat, StartLon}, Bearing, Distance) ->
+    LatRad1 = deg_to_rad(StartLat), 
+    LonRad1 = deg_to_rad(StartLon), 
+
+    AngDist = Distance/?EARTH_MEAN_RAD,
+
+    Prod1 = math:sin(LatRad1) * math:cos(AngDist), 
+    Prod2 = math:cos(LatRad1) * math:sin(AngDist) * math:cos(Bearing),
+    LatRad2 = math:asin(Prod1 + Prod2),
+
+    Term1 = math:sin(Bearing) * math:sin(AngDist) * math:cos(LatRad1),
+    Term2 = math:cos(AngDist) - math:sin(LatRad1) * math:sin(LatRad2),
+    LonRad2 = LonRad1 + math:atan2(Term1, Term2),
+
+    %% Convert angles back to degrees and normalise.
+    LatDeg = rad_to_deg(LatRad2),
+    LonDeg = rad_to_deg(LonRad2),
+    NormLonDeg = LonDeg, %% Need to normalise this to +/-180
+    {LatDeg, NormLonDeg}.
     
