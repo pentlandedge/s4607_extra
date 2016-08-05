@@ -20,7 +20,8 @@
     deg_to_rad/1, 
     haversine_distance/2,
     initial_bearing/2,
-    destination/3]).
+    destination/3,
+    fmod/2]).
 
 %% WGS84 constants.
 -define(WGS84_A, 6378137).
@@ -135,6 +136,12 @@ destination({StartLat, StartLon}, Bearing, Distance) ->
     %% Convert angles back to degrees and normalise.
     LatDeg = rad_to_deg(LatRad2),
     LonDeg = rad_to_deg(LonRad2),
-    NormLonDeg = LonDeg, %% Need to normalise this to +/-180
+    NormLonDeg = fmod((LonDeg + 540.0), 360.0) - 180.0,  
     {LatDeg, NormLonDeg}.
-    
+
+%% Calculate the floating point remainder. Referenced rvirding's luerl.
+fmod(X, Y) ->
+    Div = float(trunc(X/Y)),
+    Rem = X - Div*Y,
+    Rem.
+
