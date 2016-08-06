@@ -20,8 +20,8 @@
 
 %% Define a test generator function to run all the tests. 
 coord_test_() ->
-    [lla_to_ecef_checks(), haversine_checks(), initial_bearing_checks(),
-     destination_checks()].
+    [lla_to_ecef_checks(), ecef_distance_checks(), haversine_checks(), 
+     initial_bearing_checks(), destination_checks()].
 
 lla_to_ecef_checks() ->
     % Start with a point on the equator.
@@ -49,6 +49,10 @@ lla_to_ecef_checks() ->
      ?_assert(almost_equal(-6378137, X4, 1)),
      ?_assert(almost_equal(0.0, Y4, 0.001)),
      ?_assert(almost_equal(0.0, Z4, 0.001))].
+
+ecef_distance_checks() ->
+    Dist = coord:ecef_distance({45,-20,88}, {-13,44,200}),
+    [?_assert(almost_equal(141.435498, Dist, 0.0001))].
 
 haversine_checks() ->
     Pt1 = {55.9987, -2.71},

@@ -17,6 +17,7 @@
 
 -export([
     lla_to_ecef/1, 
+    ecef_distance/2,
     deg_to_rad/1, 
     haversine_distance/2,
     initial_bearing/2,
@@ -58,6 +59,12 @@ lla_to_ecef({Lat,Lon,Alt}) ->
     Z = ((Bsquared/Asquared) * N + H) * SinLat, 
 
     {X, Y, Z}.
+
+ecef_distance({X1, Y1, Z1}, {X2, Y2, Z2}) ->
+    T1 = math:pow(X2 - X1, 2),
+    T2 = math:pow(Y2 - Y1, 2),
+    T3 = math:pow(Z2 - Z1, 2),
+    math:sqrt(T1 + T2 + T3).
 
 deg_to_rad(Deg) ->
     Deg * math:pi() / 180.
