@@ -122,14 +122,15 @@ initial_bearing({Lat1, Lon1}, {Lat2, Lon2}) ->
 destination({StartLat, StartLon}, Bearing, Distance) ->
     LatRad1 = deg_to_rad(StartLat), 
     LonRad1 = deg_to_rad(StartLon), 
+    BearRad = deg_to_rad(Bearing),
 
     AngDist = Distance/?EARTH_MEAN_RAD,
 
     Prod1 = math:sin(LatRad1) * math:cos(AngDist), 
-    Prod2 = math:cos(LatRad1) * math:sin(AngDist) * math:cos(Bearing),
+    Prod2 = math:cos(LatRad1) * math:sin(AngDist) * math:cos(BearRad),
     LatRad2 = math:asin(Prod1 + Prod2),
 
-    Term1 = math:sin(Bearing) * math:sin(AngDist) * math:cos(LatRad1),
+    Term1 = math:sin(BearRad) * math:sin(AngDist) * math:cos(LatRad1),
     Term2 = math:cos(AngDist) - math:sin(LatRad1) * math:sin(LatRad2),
     LonRad2 = LonRad1 + math:atan2(Term1, Term2),
 
