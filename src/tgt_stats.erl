@@ -164,14 +164,6 @@ dwell_area_to_polygon(DwellArea, SensorPos) ->
     PtC = coord:destination({SenLat, SenLon}, CentreAngle + AngleHE, FarDist),
     PtD = coord:destination({SenLat, SenLon}, CentreAngle + AngleHE, NearDist),
 
-    % Hardcode these at present. Note they are in Lon, Lat pairs.
-    %PtA = [-2.735, 55.985],
-    %PtB = [-2.74, 56.015],
-    %PtC = [-2.675, 56.015],
-    %PtD = [-2.68, 55.985],
-    %{PtA, PtB, PtC, PtD}.
-
-    %{F(PtA), F(PtB), F(PtC), F(PtD)}.
     {PtA, PtB, PtC, PtD}.
 
 gen_tgt_geojson(Timestamp, Lat, Lon, Alt) ->
