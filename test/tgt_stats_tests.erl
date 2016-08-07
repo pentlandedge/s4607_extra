@@ -76,7 +76,7 @@ dwell_area_to_polygon_checks() ->
     RangeHalfExtentKM = 2.5,
     DwellRangeHalfExtentM = RangeHalfExtentKM * 1000, 
     % Dwell centre on the East Fortune runway crossing.
-    % Use a 30 degree width of the dwell.
+    % Use a 45 degree width of the dwell.
     DwellArea = {55.999591, -2.718204, DwellRangeHalfExtentM, 22.5}, 
 
     % Dwell altitute is expressed in cm above WGS84 ellipsoid. Convert to 
@@ -86,15 +86,18 @@ dwell_area_to_polygon_checks() ->
     DellAltM = DwellAltCm / 100.0, 
     SensorPos = {55.928613, -2.66116, DellAltM},
 
-    {PtA, PtB, _PtC, _PtD} = tgt_stats:dwell_area_to_polygon(DwellArea, SensorPos),
+    {PtA, PtB, PtC, _PtD} = tgt_stats:dwell_area_to_polygon(DwellArea, SensorPos),
     % Distance from sensor to dwell centre is 8654m, initial bearing 335.803889 deg.
     % Use the online 
     {LatA, LonA} = PtA,
     {LatB, LonB} = PtB,
+    {LatC, LonC} = PtC,
     [?_assert(almost_equal(55.966667, LatA, 0.001)),
      ?_assert(almost_equal(-2.733056, LonA, 0.001)),
      ?_assert(almost_equal(55.997222, LatB, 0.001)),
-     ?_assert(almost_equal(-2.791667,  LonB, 0.001))
+     ?_assert(almost_equal(-2.791667, LonB, 0.001)),
+     ?_assert(almost_equal(56.028889, LatC, 0.001)),
+     ?_assert(almost_equal(-2.666389, LonC, 0.001))
     ].
 
 %% Utility function to compare whether floating point values are within a 
