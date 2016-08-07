@@ -139,15 +139,6 @@ dwell_area_to_geojson(TimeStr, PtA, PtB, PtC, PtD)
 %% Ignore the altitude of the sensor for now and calculate the boundary 
 %% points by applying the haversine formula to give the distance between two
 %% Lat, Lon points along the arc of a great circle.
-%%
-%% Note: plan to rewrite this function with a different algorithm using the 
-%% slant ranges to calculate the width of the beam and hence the vertices of
-%% the polygon.
-%% Second note: this is actually more complicated if a proper calculation is 
-%% to be made since we have to calculate the intersections of a number of 
-%% overlapping geometric beam shapes (conical?) with the spherical earth.
-%% Stick with the simple calculcation for now (ignore altitude) and come
-%% back to this later.
 dwell_area_to_polygon(DwellArea, SensorPos) ->
     {CentreLat, CentreLon, RangeHE, AngleHE} = DwellArea,
     {SenLat, SenLon, _} = SensorPos,
