@@ -20,7 +20,8 @@
 
 %% Define a test generator function to run all the tests. 
 tgt_stats_test_() ->
-    [datetime_string_checks(), extract_check1(), geojson_check1()].
+    [datetime_string_checks(), extract_check1(), geojson_check1(),
+     dwell_area_to_polygon_checks()].
 
 datetime_string_checks() ->
     DT = {{2016,7,27},{8,12,59}},
@@ -69,4 +70,22 @@ geojson_check1() ->
     [?_assertEqual(<<"{\"type\":\"FeatureCollection\"">>, TypeStr),
      ?_assertEqual(F2, Text2),
      ?_assertEqual(DwellTime, TimeStr)].
+
+dwell_area_to_polygon_checks() ->
+    % 5km range swathe.
+    RangeHalfExtentKM = 2.5,
+    DwellRangeHalfExtentM = RangeHalfExtentKM * 1000, 
+    % Dwell centre on the East Fortune runway crossing.
+    % Use a 7.0 degree beam width.
+    DwellArea = {55.999591, -2.718204, DwellRangeHalfExtentM, 3.5}, 
+
+    % Dwell altitute is expressed in cm above WGS84 ellipsoid. Convert to 
+    % metres before usage.
+    % Use the Garvald Inn as our sensor position, at an altitude of 1000m.
+    DwellAltCm = 100000,
+    DellAltM = DwellAltCm / 100.0, 
+    SensorPos = {55.928613, -2.66116, DellAltM},
+
+    {_PtA, _PtB, _PtC, _PtD} = tgt_stats:dwell_area_to_polygon(DwellArea, SensorPos),
+    [].
 

@@ -18,6 +18,7 @@
 -export([
     extract/1, 
     dwell_dicts_to_geojson/1, 
+    dwell_area_to_polygon/2,
     dwell_to_geojson/1,
     datetime_to_string/1,
     date_ms_to_datetime/2]).
