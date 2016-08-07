@@ -108,7 +108,13 @@ dwell_to_geojson(DwellDict) ->
 
     {PtA, PtB, PtC, PtD} = dwell_area_to_polygon(DwellArea, SensorPos),
     
-    DwellAreaGeo = dwell_area_to_geojson(TimeStr, PtA, PtB, PtC, PtD),
+    % Fun to convert {Lat,Lon} to [Lon,Lat] form used by GeoJSON.
+    F = fun(LatLon) ->
+            LonLat = latlon_to_lonlat(LatLon),
+            tuple_to_list(LonLat)
+        end,
+
+    DwellAreaGeo = dwell_area_to_geojson(TimeStr, F(PtA), F(PtB), F(PtC), F(PtD)),
     Tgt1 = gen_tgt_geojson(TimeStr, 55.9987, -2.71, 1),            
     Tgt2 = gen_tgt_geojson(TimeStr, 55.9988, -2.711, 1),
 
@@ -137,6 +143,11 @@ dwell_area_to_geojson(TimeStr, PtA, PtB, PtC, PtD)
 %% Note: plan to rewrite this function with a different algorithm using the 
 %% slant ranges to calculate the width of the beam and hence the vertices of
 %% the polygon.
+%% Second note: this is actually more complicated if a proper calculation is 
+%% to be made since we have to calculate the intersections of a number of 
+%% overlapping geometric beam shapes (conical?) with the spherical earth.
+%% Stick with the simple calculcation for now (ignore altitude) and come
+%% back to this later.
 dwell_area_to_polygon(DwellArea, SensorPos) ->
     {CentreLat, CentreLon, RangeHE, AngleHE} = DwellArea,
     {SenLat, SenLon, _} = SensorPos,
@@ -148,16 +159,19 @@ dwell_area_to_polygon(DwellArea, SensorPos) ->
     NearDist = CentreDist - RangeHE,
     FarDist = CentreDist + RangeHE,
 
-    _PtA = coord:destination({SenLat, SenLon}, CentreAngle - AngleHE, NearDist),
-    _PtB = coord:destination({SenLat, SenLon}, CentreAngle - AngleHE, FarDist),
-    _PtC = coord:destination({SenLat, SenLon}, CentreAngle + AngleHE, NearDist),
-    _PtD = coord:destination({SenLat, SenLon}, CentreAngle + AngleHE, FarDist),
+    PtA = coord:destination({SenLat, SenLon}, CentreAngle - AngleHE, NearDist),
+    PtB = coord:destination({SenLat, SenLon}, CentreAngle - AngleHE, FarDist),
+    PtC = coord:destination({SenLat, SenLon}, CentreAngle + AngleHE, FarDist),
+    PtD = coord:destination({SenLat, SenLon}, CentreAngle + AngleHE, NearDist),
 
     % Hardcode these at present. Note they are in Lon, Lat pairs.
-    PtA = [-2.735, 55.985],
-    PtB = [-2.74, 56.015],
-    PtC = [-2.675, 56.015],
-    PtD = [-2.68, 55.985],
+    %PtA = [-2.735, 55.985],
+    %PtB = [-2.74, 56.015],
+    %PtC = [-2.675, 56.015],
+    %PtD = [-2.68, 55.985],
+    %{PtA, PtB, PtC, PtD}.
+
+    %{F(PtA), F(PtB), F(PtC), F(PtD)}.
     {PtA, PtB, PtC, PtD}.
 
 gen_tgt_geojson(Timestamp, Lat, Lon, Alt) ->
@@ -181,4 +195,8 @@ date_ms_to_datetime({_Y, _M, _D} = Date, MS) ->
     RefSecs = calendar:datetime_to_gregorian_seconds({Date, {0,0,0}}),
     TotalSecs = RefSecs + (MS div 1000),
     calendar:gregorian_seconds_to_datetime(TotalSecs).
+
+%% Function to convert {Lat, Lon} tuples to {Lon, Lat} form used by GeoJson.
+latlon_to_lonlat({Lat,Lon}) ->
+    {Lon,Lat}.
 
