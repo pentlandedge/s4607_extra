@@ -87,10 +87,10 @@ one_target_dwell() ->
     % Set the fields of the dwell segment.
     P = [{existence_mask, EM}, {revisit_index, 100}, {dwell_index, 20000}, 
          {last_dwell_of_revisit, no_additional_dwells}, {target_report_count, 1}, 
-         {dwell_time, 1000000}, {sensor_lat, -45.0}, {sensor_lon, 350},
-         {sensor_alt, -10000}, {dwell_center_lat, -45.2}, 
-         {dwell_center_lon, 350.2}, {dwell_range_half_extent, 255.0}, 
-         {dwell_angle_half_extent, 350}, {targets, [TgtRep]}],
+         {dwell_time, 1000000}, {sensor_lat, 55.928613}, {sensor_lon, -2.66116},
+         {sensor_alt, 100000}, {dwell_center_lat, 55.999591}, 
+         {dwell_center_lon, -2.718204}, {dwell_range_half_extent, 2.5}, 
+         {dwell_angle_half_extent, 22.5}, {targets, [TgtRep]}],
 
     % Create and return the dwell segment.
     dwell:new(P).
