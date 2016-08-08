@@ -100,11 +100,15 @@ dwell_to_geojson(DwellDict) ->
     SensorLat = dict:fetch(sensor_lat, DwellDict),
     SensorLon = dict:fetch(sensor_lon, DwellDict),
     SensorAlt = dict:fetch(sensor_alt, DwellDict),
-    
-    DwellArea = {DwellCentreLat, DwellCentreLon, 
-                 DwellRangeHalfExtent, DwellAngleHalfExtent},
 
-    SensorPos = {SensorLat, SensorLon, SensorAlt},
+    %% Convert parameters to the appopriate units for calculation.
+    DwellRangeHalfExtentMetres = km_to_m(DwellRangeHalfExtent),
+    SensorAltMetres = cm_to_m(SensorAlt),
+
+    DwellArea = {DwellCentreLat, DwellCentreLon, 
+                 DwellRangeHalfExtentMetres, DwellAngleHalfExtent},
+
+    SensorPos = {SensorLat, SensorLon, SensorAltMetres},
 
     {PtA, PtB, PtC, PtD} = dwell_area_to_polygon(DwellArea, SensorPos),
     
@@ -122,6 +126,12 @@ dwell_to_geojson(DwellDict) ->
         {<<"type">>,<<"FeatureCollection">>}, 
         {<<"features">>, [DwellAreaGeo, Tgt1, Tgt2]}
     ]). 
+
+%% Convert distance in kilometres to metres.
+km_to_m(Dist) -> Dist * 1000.
+
+%% Convert cm to m.
+cm_to_m(Dist) -> Dist / 100.
 
 dwell_area_to_geojson(TimeStr, PtA, PtB, PtC, PtD) 
     when is_list(PtA), is_list(PtB), is_list(PtC), is_list(PtD) ->
