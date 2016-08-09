@@ -62,10 +62,9 @@ one_target_dwell() ->
          dwell_range_half_extent, dwell_angle_half_extent, targets],
   
     % The fields of the target report.
-    Params = [{mti_report_index, 34}, {target_hr_lat, -33.3}, 
-              {target_hr_lon, 357.57}, {target_delta_lat, -45},
-              {target_delta_lon, 46}, {geodetic_height, 5000},
-              {target_vel_los, 32000}, {target_wrap_velocity, 40000},
+    Params = [{mti_report_index, 34}, {target_hr_lat, 55.9987}, 
+              {target_hr_lon, -2.71}, {geodetic_height, 100},
+              {target_vel_los, 530}, {target_wrap_velocity, 40000},
               {target_snr, -128}, {target_classification, vehicle_live_target},
               {target_class_prob, 90}, {target_slant_range_unc, 1000},
               {target_cross_range_unc, 2000}, {target_height_unc, 200},
