@@ -122,9 +122,11 @@ dwell_to_geojson(DwellDict) ->
     Tgt1 = gen_tgt_geojson(TimeStr, 55.9987, -2.71, 1),            
     Tgt2 = gen_tgt_geojson(TimeStr, 55.9988, -2.711, 1),
 
+    FeatureList = [DwellAreaGeo, Tgt1, Tgt2],
+
     jsx:encode([
         {<<"type">>,<<"FeatureCollection">>}, 
-        {<<"features">>, [DwellAreaGeo, Tgt1, Tgt2]}
+        {<<"features">>, FeatureList}
     ]). 
 
 %% Convert distance in kilometres to metres.
