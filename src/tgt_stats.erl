@@ -121,20 +121,25 @@ dwell_to_geojson(DwellDict) ->
     % Get the target reports from the dwell.
     TgtReps = dict:fetch(targets, DwellDict),
 
-    % Define a function to work on each target report and convert it to GeoJson
-    G  = fun(_T) ->
-            gen_tgt_geojson(TimeStr, 55.9987, -2.71, 1)        
+    % Define a function to work on each target report, extract the bits we 
+    % need and convert it to GeoJson
+    G = fun(TgtDict) ->
+            HrLat = dict:fetch(target_hr_lat, TgtDict), 
+            HrLon = dict:fetch(target_hr_lon, TgtDict), 
+            Height = dict:fetch(geodetic_height, TgtDict), 
+            gen_tgt_geojson(TimeStr, HrLat, HrLon, Height)        
         end,
 
+    % Apply the function to the list of target dicts.
     TgtGeoList = lists:map(G, TgtReps),
 
+    % Construct the dwell area GeoGJON.
     DwellAreaGeo = dwell_area_to_geojson(TimeStr, F(PtA), F(PtB), F(PtC), F(PtD)),
-    %Tgt1 = gen_tgt_geojson(TimeStr, 55.9987, -2.71, 1),            
-    %Tgt2 = gen_tgt_geojson(TimeStr, 55.9988, -2.711, 1),
 
     % Prepend the dwell area to the list of targets to create our features.
     FeatureList = [DwellAreaGeo|TgtGeoList],
 
+    % Encode the whole lot and return to caller.
     jsx:encode([
         {<<"type">>,<<"FeatureCollection">>}, 
         {<<"features">>, FeatureList}
