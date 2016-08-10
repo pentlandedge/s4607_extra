@@ -126,8 +126,12 @@ dwell_dict_prep(DwellDict) ->
     G = fun(TgtDict) ->
             HrLat = dict:fetch(target_hr_lat, TgtDict), 
             HrLon = dict:fetch(target_hr_lon, TgtDict), 
+            HrLonN = case HrLon > 180.0 of
+                         true -> HrLon - 360.0;
+                         false -> HrLon
+                     end,
             Height = dict:fetch(geodetic_height, TgtDict), 
-            gen_tgt_geojson(TimeStr, HrLat, HrLon, Height)        
+            gen_tgt_geojson(TimeStr, HrLat, HrLonN, Height)        
         end,
 
     % Apply the function to the list of target dicts.
@@ -199,8 +203,12 @@ dwell_to_geojson(DwellDict) ->
     G = fun(TgtDict) ->
             HrLat = dict:fetch(target_hr_lat, TgtDict), 
             HrLon = dict:fetch(target_hr_lon, TgtDict), 
+            HrLonN = case HrLon > 180.0 of
+                         true -> HrLon - 360.0;
+                         false -> HrLon
+                     end,
             Height = dict:fetch(geodetic_height, TgtDict), 
-            gen_tgt_geojson(TimeStr, HrLat, HrLon, Height)        
+            gen_tgt_geojson(TimeStr, HrLat, HrLonN, Height)        
         end,
 
     % Apply the function to the list of target dicts.
