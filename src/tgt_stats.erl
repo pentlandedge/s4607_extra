@@ -153,78 +153,11 @@ dwell_dict_prep(DwellDict) ->
 %% form.
 dwell_to_geojson(DwellDict) ->
 
-    % Extract the mission time.
-    MissTime = dict:fetch(mission_time, DwellDict),
-
-    % Extract the dwell time (given in ms offset from the mission time).
-    DwellTime = dict:fetch(dwell_time, DwellDict),
-
-    % Convert to UTC (seconds precision).
-    DwellUTC = tgt_stats:date_ms_to_datetime(MissTime, DwellTime),
-
-    % Convert the UTC timestamp to a string.
-    TimeStr = datetime_to_string(DwellUTC),
-    
-    % Extract the parameters related to the dwell area from the segment.
-    DwellCentreLat = dict:fetch(dwell_center_lat, DwellDict),
-    DwellCentreLon = dict:fetch(dwell_center_lon, DwellDict),
-    DwellRangeHalfExtent = dict:fetch(dwell_range_half_extent, DwellDict),
-    DwellAngleHalfExtent = dict:fetch(dwell_angle_half_extent, DwellDict),
-
-    % Extract the sensor position paramters. We need these to be able to 
-    % make sense of the dwell angle parameters when calculating the dwell
-    % area extent on the ground.
-    SensorLat = dict:fetch(sensor_lat, DwellDict),
-    SensorLon = dict:fetch(sensor_lon, DwellDict),
-    SensorAlt = dict:fetch(sensor_alt, DwellDict),
-
-    %% Convert parameters to the appopriate units for calculation.
-    DwellRangeHalfExtentMetres = km_to_m(DwellRangeHalfExtent),
-    SensorAltMetres = cm_to_m(SensorAlt),
-
-    DwellArea = {DwellCentreLat, DwellCentreLon, 
-                 DwellRangeHalfExtentMetres, DwellAngleHalfExtent},
-
-    SensorPos = {SensorLat, SensorLon, SensorAltMetres},
-
-    {PtA, PtB, PtC, PtD} = dwell_area_to_polygon(DwellArea, SensorPos),
-    
-    % Fun to convert {Lat,Lon} to [Lon,Lat] form used by GeoJSON.
-    F = fun(LatLon) ->
-            LonLat = latlon_to_lonlat(LatLon),
-            tuple_to_list(LonLat)
-        end,
-
-    % Get the target reports from the dwell.
-    TgtReps = dict:fetch(targets, DwellDict),
-
-    % Define a function to work on each target report, extract the bits we 
-    % need and convert it to GeoJson
-    G = fun(TgtDict) ->
-            HrLat = dict:fetch(target_hr_lat, TgtDict), 
-            HrLon = dict:fetch(target_hr_lon, TgtDict), 
-            HrLonN = case HrLon > 180.0 of
-                         true -> HrLon - 360.0;
-                         false -> HrLon
-                     end,
-            Height = dict:fetch(geodetic_height, TgtDict), 
-            gen_tgt_geojson(TimeStr, HrLat, HrLonN, Height)        
-        end,
-
-    % Apply the function to the list of target dicts.
-    TgtGeoList = lists:map(G, TgtReps),
-
-    % Construct the dwell area GeoGJON.
-    DwellAreaGeo = dwell_area_to_geojson(TimeStr, F(PtA), F(PtB), F(PtC), F(PtD)),
-
-    % Prepend the dwell area to the list of targets to create our features.
-    FeatureList = [DwellAreaGeo|TgtGeoList],
+    % Process the dwell dictionary.
+    Collection = dwell_dict_prep(DwellDict),
 
     % Encode the whole lot and return to caller.
-    jsx:encode([
-        {<<"type">>,<<"FeatureCollection">>}, 
-        {<<"features">>, FeatureList}
-    ]). 
+    jsx:encode(Collection). 
 
 %% Convert distance in kilometres to metres.
 km_to_m(Dist) -> Dist * 1000.
