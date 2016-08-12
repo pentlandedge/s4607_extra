@@ -93,18 +93,12 @@ dwell_dict_prep(DwellDict) ->
     % Extract the sensor position paramters. We need these to be able to 
     % make sense of the dwell angle parameters when calculating the dwell
     % area extent on the ground.
-    SensorLat = dict:fetch(sensor_lat, DwellDict),
-    SensorLon = dict:fetch(sensor_lon, DwellDict),
-    SensorAlt = dict:fetch(sensor_alt, DwellDict),
-
-    %% Convert parameters to the appopriate units for calculation.
-    SensorAltMetres = cm_to_m(SensorAlt),
+    SensorPos = get_sensor_position(DwellDict), 
 
     % Extract the dwell area parameters in unit suitable for calculations.
     DwellArea = get_dwell_area(DwellDict),
     
-    SensorPos = {SensorLat, SensorLon, SensorAltMetres},
-
+    % Calculate the vertices of the dwell polygon.
     {PtA, PtB, PtC, PtD} = dwell_area_to_polygon(DwellArea, SensorPos),
 
     % Get the target reports from the dwell.
@@ -123,10 +117,8 @@ dwell_dict_prep(DwellDict) ->
     FeatureList = [DwellAreaGeo|TgtGeoList],
 
     % Structure the whole lot for encoding and return to caller.
-    [
-        {<<"type">>,<<"FeatureCollection">>}, 
-        {<<"features">>, FeatureList}
-    ]. 
+    [{<<"type">>,<<"FeatureCollection">>}, 
+     {<<"features">>, FeatureList}]. 
 
 %% Function to convert a single dwell dictionary structure to the GeoJSON
 %% form.
@@ -151,6 +143,17 @@ get_dwell_area(DwellDict) ->
 
     {CentreLat, CentreLon, RangeHalfExtentMetres, AngleHalfExtent}.
 
+%% Extract the sensor position from the dwell dict in standard units 
+%% (altitude converted to metres).
+get_sensor_position(DwellDict) ->
+    SensorLat = dict:fetch(sensor_lat, DwellDict),
+    SensorLon = dict:fetch(sensor_lon, DwellDict),
+    SensorAlt = dict:fetch(sensor_alt, DwellDict),
+
+    %% Convert parameters to the appopriate units for calculation.
+    SensorAltMetres = cm_to_m(SensorAlt),
+
+    {SensorLat, SensorLon, SensorAltMetres}.
 
 %% Convert distance in kilometres to metres.
 km_to_m(Dist) -> Dist * 1000.
