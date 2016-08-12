@@ -78,36 +78,24 @@ dwell_dicts_to_geojson(DwellList) when is_list(DwellList) ->
 %% Collect the relevant data into a structure suitable for encoding using 
 %% the jsx library.
 dwell_dict_prep(DwellDict) ->
-    % Calculate the dwell time (UTC). 
+    % Calculate the dwell time (UTC)and convert the UTC timestamp to a string.
     DwellUTC = calculate_dwell_utc_time(DwellDict),
-
-    % Convert the UTC timestamp to a string.
     TimeStr = datetime_to_string(DwellUTC),
     
-    % Extract the sensor position paramters. We need these to be able to 
-    % make sense of the dwell angle parameters when calculating the dwell
-    % area extent on the ground.
+    % Extract the sensor position and dwell area parameters and use these to
+    % calculate the vertices of the dwell polygon.
     SensorPos = get_sensor_position(DwellDict), 
-
-    % Extract the dwell area parameters in unit suitable for calculations.
     DwellArea = get_dwell_area(DwellDict),
-    
-    % Calculate the vertices of the dwell polygon.
     {PtA, PtB, PtC, PtD} = dwell_area_to_polygon(DwellArea, SensorPos),
 
-    % Get the target reports from the dwell.
+    % Get the target reports from the dwell and convert the list to GeoJSON
+    % encoding form. Uses a closure to wrap TimeStr for the map operation.
     TgtReps = dict:fetch(targets, DwellDict),
-
-    % Create a closure to wrap TimeStr. 
     TgtToGeoJSON = fun(T) -> target_dict_to_geojson(T, TimeStr) end,
-
-    % Apply the function to the list of target dicts.
     TgtGeoList = lists:map(TgtToGeoJSON, TgtReps),
 
-    % Construct the dwell area GeoGJON.
+    % Form the dwell area GeoJSON and construct our list of features.
     DwellAreaGeo = dwell_area_to_geojson(TimeStr, PtA, PtB, PtC, PtD),
-
-    % Prepend the dwell area to the list of targets to create our features.
     FeatureList = [DwellAreaGeo|TgtGeoList],
 
     % Structure the whole lot for encoding and return to caller.
