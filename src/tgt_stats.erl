@@ -90,12 +90,6 @@ dwell_dict_prep(DwellDict) ->
     % Convert the UTC timestamp to a string.
     TimeStr = datetime_to_string(DwellUTC),
     
-    % Extract the parameters related to the dwell area from the segment.
-    DwellCentreLat = dict:fetch(dwell_center_lat, DwellDict),
-    DwellCentreLon = dict:fetch(dwell_center_lon, DwellDict),
-    DwellRangeHalfExtent = dict:fetch(dwell_range_half_extent, DwellDict),
-    DwellAngleHalfExtent = dict:fetch(dwell_angle_half_extent, DwellDict),
-
     % Extract the sensor position paramters. We need these to be able to 
     % make sense of the dwell angle parameters when calculating the dwell
     % area extent on the ground.
@@ -104,12 +98,11 @@ dwell_dict_prep(DwellDict) ->
     SensorAlt = dict:fetch(sensor_alt, DwellDict),
 
     %% Convert parameters to the appopriate units for calculation.
-    DwellRangeHalfExtentMetres = km_to_m(DwellRangeHalfExtent),
     SensorAltMetres = cm_to_m(SensorAlt),
 
-    DwellArea = {DwellCentreLat, DwellCentreLon, 
-                 DwellRangeHalfExtentMetres, DwellAngleHalfExtent},
-
+    % Extract the dwell area parameters in unit suitable for calculations.
+    DwellArea = get_dwell_area(DwellDict),
+    
     SensorPos = {SensorLat, SensorLon, SensorAltMetres},
 
     {PtA, PtB, PtC, PtD} = dwell_area_to_polygon(DwellArea, SensorPos),
@@ -144,6 +137,20 @@ dwell_to_geojson(DwellDict) ->
 
     % Encode the whole lot and return to caller.
     jsx:encode(Collection). 
+
+%% Extract the dwell area parameters and convert to standard units.
+get_dwell_area(DwellDict) ->
+    % Extract the parameters related to the dwell area from the segment.
+    CentreLat = dict:fetch(dwell_center_lat, DwellDict),
+    CentreLon = dict:fetch(dwell_center_lon, DwellDict),
+    RangeHalfExtent = dict:fetch(dwell_range_half_extent, DwellDict),
+    AngleHalfExtent = dict:fetch(dwell_angle_half_extent, DwellDict),
+    
+    %% Convert parameters to the appopriate units for calculation.
+    RangeHalfExtentMetres = km_to_m(RangeHalfExtent),
+
+    {CentreLat, CentreLon, RangeHalfExtentMetres, AngleHalfExtent}.
+
 
 %% Convert distance in kilometres to metres.
 km_to_m(Dist) -> Dist * 1000.
