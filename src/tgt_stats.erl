@@ -78,14 +78,8 @@ dwell_dicts_to_geojson(DwellList) when is_list(DwellList) ->
 %% Collect the relevant data into a structure suitable for encoding using 
 %% the jsx library.
 dwell_dict_prep(DwellDict) ->
-    % Extract the mission time.
-    MissTime = dict:fetch(mission_time, DwellDict),
-
-    % Extract the dwell time (given in ms offset from the mission time).
-    DwellTime = dict:fetch(dwell_time, DwellDict),
-
-    % Convert to UTC (seconds precision).
-    DwellUTC = tgt_stats:date_ms_to_datetime(MissTime, DwellTime),
+    % Calculate the dwell time (UTC). 
+    DwellUTC = calculate_dwell_utc_time(DwellDict),
 
     % Convert the UTC timestamp to a string.
     TimeStr = datetime_to_string(DwellUTC),
@@ -119,6 +113,17 @@ dwell_dict_prep(DwellDict) ->
     % Structure the whole lot for encoding and return to caller.
     [{<<"type">>,<<"FeatureCollection">>}, 
      {<<"features">>, FeatureList}]. 
+
+%% Calculate the dwell UTC time from the mission base and dwell offset.
+calculate_dwell_utc_time(DwellDict) ->    
+    % Extract the mission time.
+    MissTime = dict:fetch(mission_time, DwellDict),
+
+    % Extract the dwell time (given in ms offset from the mission time).
+    DwellTime = dict:fetch(dwell_time, DwellDict),
+
+    % Convert to UTC (seconds precision).
+    tgt_stats:date_ms_to_datetime(MissTime, DwellTime).
 
 %% Function to convert a single dwell dictionary structure to the GeoJSON
 %% form.
