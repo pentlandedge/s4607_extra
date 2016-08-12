@@ -113,12 +113,6 @@ dwell_dict_prep(DwellDict) ->
     SensorPos = {SensorLat, SensorLon, SensorAltMetres},
 
     {PtA, PtB, PtC, PtD} = dwell_area_to_polygon(DwellArea, SensorPos),
-    
-    % Fun to convert {Lat,Lon} to [Lon,Lat] form used by GeoJSON.
-    F = fun(LatLon) ->
-            LonLat = latlon_to_lonlat(LatLon),
-            tuple_to_list(LonLat)
-        end,
 
     % Get the target reports from the dwell.
     TgtReps = dict:fetch(targets, DwellDict),
@@ -130,7 +124,7 @@ dwell_dict_prep(DwellDict) ->
     TgtGeoList = lists:map(TgtToGeoJSON, TgtReps),
 
     % Construct the dwell area GeoGJON.
-    DwellAreaGeo = dwell_area_to_geojson(TimeStr, F(PtA), F(PtB), F(PtC), F(PtD)),
+    DwellAreaGeo = dwell_area_to_geojson(TimeStr, PtA, PtB, PtC, PtD),
 
     % Prepend the dwell area to the list of targets to create our features.
     FeatureList = [DwellAreaGeo|TgtGeoList],
@@ -157,8 +151,13 @@ km_to_m(Dist) -> Dist * 1000.
 %% Convert cm to m.
 cm_to_m(Dist) -> Dist / 100.
 
-dwell_area_to_geojson(TimeStr, PtA, PtB, PtC, PtD) 
-    when is_list(PtA), is_list(PtB), is_list(PtC), is_list(PtD) ->
+%% Convert the dwell area  parameters to a form suitable for GeoJSON 
+%% encoding.
+dwell_area_to_geojson(TimeStr, LatLonA, LatLonB, LatLonC, LatLonD) ->
+    PtA = latlon_tuple_to_lonlat_list(LatLonA),
+    PtB = latlon_tuple_to_lonlat_list(LatLonB),
+    PtC = latlon_tuple_to_lonlat_list(LatLonC),
+    PtD = latlon_tuple_to_lonlat_list(LatLonD),
     [{<<"type">>, <<"Feature">>},
         {<<"properties">>, [{<<"time">>, list_to_binary(TimeStr)}]},
         {<<"geometry">>, 
@@ -228,4 +227,9 @@ date_ms_to_datetime({_Y, _M, _D} = Date, MS) ->
 %% Function to convert {Lat, Lon} tuples to {Lon, Lat} form used by GeoJson.
 latlon_to_lonlat({Lat,Lon}) ->
     {Lon,Lat}.
+
+%% Convert a tuple of {Lat, Lon} to a list [Lon, Lat] form.
+latlon_tuple_to_lonlat_list({_Lat, _Lon} = LatLon) ->
+    LonLat = latlon_to_lonlat(LatLon),
+    tuple_to_list(LonLat).
 
