@@ -75,6 +75,8 @@ dwell_dicts_to_geojson(DwellList) when is_list(DwellList) ->
         {<<"data">>, PrepList}
     ]). 
 
+%% Collect the relevant data into a structure suitable for encoding using 
+%% the jsx library.
 dwell_dict_prep(DwellDict) ->
     % Extract the mission time.
     MissTime = dict:fetch(mission_time, DwellDict),
@@ -121,21 +123,11 @@ dwell_dict_prep(DwellDict) ->
     % Get the target reports from the dwell.
     TgtReps = dict:fetch(targets, DwellDict),
 
-    % Define a function to work on each target report, extract the bits we 
-    % need and convert it to GeoJson
-    G = fun(TgtDict) ->
-            HrLat = dict:fetch(target_hr_lat, TgtDict), 
-            HrLon = dict:fetch(target_hr_lon, TgtDict), 
-            HrLonN = case HrLon > 180.0 of
-                         true -> HrLon - 360.0;
-                         false -> HrLon
-                     end,
-            Height = dict:fetch(geodetic_height, TgtDict), 
-            gen_tgt_geojson(TimeStr, HrLat, HrLonN, Height)        
-        end,
+    % Create a closure to wrap TimeStr. 
+    TgtToGeoJSON = fun(T) -> target_dict_to_geojson(T, TimeStr) end,
 
     % Apply the function to the list of target dicts.
-    TgtGeoList = lists:map(G, TgtReps),
+    TgtGeoList = lists:map(TgtToGeoJSON, TgtReps),
 
     % Construct the dwell area GeoGJON.
     DwellAreaGeo = dwell_area_to_geojson(TimeStr, F(PtA), F(PtB), F(PtC), F(PtD)),
@@ -198,6 +190,18 @@ dwell_area_to_polygon(DwellArea, SensorPos) ->
     PtD = coord:destination({SenLat, SenLon}, CentreAngle + AngleHE, NearDist),
 
     {PtA, PtB, PtC, PtD}.
+
+%% Extract the relevant fields from a target dict and produce a GeoJson form 
+%% suitable for encoding.
+target_dict_to_geojson(TgtDict, TimeStr) ->
+    HrLat = dict:fetch(target_hr_lat, TgtDict), 
+    HrLon = dict:fetch(target_hr_lon, TgtDict), 
+    HrLonN = case HrLon > 180.0 of
+                 true -> HrLon - 360.0;
+                 false -> HrLon
+             end,
+    Height = dict:fetch(geodetic_height, TgtDict), 
+    gen_tgt_geojson(TimeStr, HrLat, HrLonN, Height).
 
 gen_tgt_geojson(Timestamp, Lat, Lon, Alt) ->
     [{<<"type">>, <<"Feature">>},
