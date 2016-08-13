@@ -34,9 +34,8 @@ extract(PacketList) when is_list(PacketList) ->
     % Only interested in mission and dwell segments.
     Segs = s4607:get_segments_by_type([mission, dwell], PacketList),
 
+    % Process the list of segments, accumulating statistics.
     InitStats = #stat_acc{ref_time = 0, dwell_list = []}, 
-
-    % Apply the fun over the list of segments.
     #stat_acc{dwell_list = Dwells} = 
         lists:foldl(fun process_segment/2, InitStats, Segs),
     
@@ -59,10 +58,8 @@ process_segment(Seg, #stat_acc{ref_time = RT, dwell_list = DL} = AccStats) ->
             % Turn it into a dictionary.
             DwellDict = dwell:to_dict(SegData),
 
-            % Add the mission time.
+            % Add the mission time and prepend to the list of dwells.
             DwellParams = dict:store(mission_time, RT, DwellDict),
-
-            % Prepend to the list of dwells
             NewDwellList = [DwellParams|DL],
             AccStats#stat_acc{dwell_list = NewDwellList}
     end.
@@ -72,9 +69,7 @@ process_segment(Seg, #stat_acc{ref_time = RT, dwell_list = DL} = AccStats) ->
 %% mapping client.
 dwell_dicts_to_geojson(DwellList) when is_list(DwellList) ->
     PrepList = lists:map(fun dwell_dict_prep/1, DwellList),
-    jsx:encode([
-        {<<"data">>, PrepList}
-    ]). 
+    jsx:encode([{<<"data">>, PrepList}]). 
 
 %% Collect the relevant data into a structure suitable for encoding using 
 %% the jsx library.
@@ -163,13 +158,9 @@ dwell_area_to_geojson(TimeStr, LatLonA, LatLonB, LatLonC, LatLonD) ->
     PtC = latlon_tuple_to_lonlat_list(LatLonC),
     PtD = latlon_tuple_to_lonlat_list(LatLonD),
     [{<<"type">>, <<"Feature">>},
-        {<<"properties">>, [{<<"time">>, list_to_binary(TimeStr)}]},
-        {<<"geometry">>, 
-            [{<<"type">>, <<"Polygon">>}, 
-                {<<"coordinates">>, [[PtA, PtB, PtC, PtD, PtA]]}
-            ]
-        }
-    ].
+     {<<"properties">>, [{<<"time">>, list_to_binary(TimeStr)}]},
+     {<<"geometry">>, [{<<"type">>, <<"Polygon">>}, 
+                       {<<"coordinates">>, [[PtA, PtB, PtC, PtD, PtA]]}]}].
 
 %% @doc Function to convert the dwell area parameters into a bounding polygon
 %% that can be displayed.
@@ -210,8 +201,7 @@ gen_tgt_geojson(Timestamp, Lat, Lon, Alt) ->
     [{<<"type">>, <<"Feature">>},
      {<<"properties">>, [{<<"time">>, list_to_binary(Timestamp)}]},
      {<<"geometry">>, [{<<"type">>, <<"Point">>},
-                       {<<"coordinates">>, [Lon, Lat, Alt]}]}
-    ]. 
+                       {<<"coordinates">>, [Lon, Lat, Alt]}]}]. 
 
 %% Function to convert the reference date from the mission segment to a 
 %% string.
