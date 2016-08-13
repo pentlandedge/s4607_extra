@@ -34,37 +34,38 @@ extract(PacketList) when is_list(PacketList) ->
     % Only interested in mission and dwell segments.
     Segs = s4607:get_segments_by_type([mission, dwell], PacketList),
 
-    % Function to operate on each segment.
-    F = fun(Seg, #stat_acc{ref_time = RT, dwell_list = DL} = AccStats) ->
-            SH = segment:get_header(Seg),
-            SegData = segment:get_data(Seg),
-            T = seg_header:get_segment_type(SH),
-            case T of
-                mission ->
-                    % Extract the time from the mission segment and update
-                    % the current reference time.
-                    NewRef = mission:get_time(SegData), 
-                    AccStats#stat_acc{ref_time = NewRef};
-                dwell ->
-                    % Turn it into a dictionary.
-                    DwellDict = dwell:to_dict(SegData),
-
-                    % Add the mission time.
-                    DwellParams = dict:store(mission_time, RT, DwellDict),
-
-                    % Prepend to the list of dwells
-                    NewDwellList = [DwellParams|DL],
-                    AccStats#stat_acc{dwell_list = NewDwellList}
-            end
-        end,
-
     InitStats = #stat_acc{ref_time = 0, dwell_list = []}, 
 
     % Apply the fun over the list of segments.
-    #stat_acc{dwell_list = Dwells} = lists:foldl(F, InitStats, Segs),
+    #stat_acc{dwell_list = Dwells} = 
+        lists:foldl(fun process_segment/2, InitStats, Segs),
     
     % Reverse the list to return it to chronological order.
     lists:reverse(Dwells).
+
+%% Function to operate on each segment, extracting the required information.
+%% Accumulates statistics, designed to work with a fold.
+process_segment(Seg, #stat_acc{ref_time = RT, dwell_list = DL} = AccStats) ->
+    SH = segment:get_header(Seg),
+    SegData = segment:get_data(Seg),
+    T = seg_header:get_segment_type(SH),
+    case T of
+        mission ->
+            % Extract the time from the mission segment and update
+            % the current reference time.
+            NewRef = mission:get_time(SegData), 
+            AccStats#stat_acc{ref_time = NewRef};
+        dwell ->
+            % Turn it into a dictionary.
+            DwellDict = dwell:to_dict(SegData),
+
+            % Add the mission time.
+            DwellParams = dict:store(mission_time, RT, DwellDict),
+
+            % Prepend to the list of dwells
+            NewDwellList = [DwellParams|DL],
+            AccStats#stat_acc{dwell_list = NewDwellList}
+    end.
 
 %% Function to convert a list of Dwell dictionaries (created by the extract/1
 %% function above) to a list of GeoJSON records suitable to passing to a 
