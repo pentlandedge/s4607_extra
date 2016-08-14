@@ -65,7 +65,9 @@ process_seg_data(dwell, SegData,
     % Add the mission time and prepend to the list of dwells.
     DwellParams = dict:store(mission_time, RT, DwellDict),
     NewDwellList = [DwellParams|DL],
-    AccStats#stat_acc{dwell_list = NewDwellList}.
+    AccStats#stat_acc{dwell_list = NewDwellList};
+process_seg_data(_, _, #stat_acc{} = AccStats) ->
+    AccStats.
 
 %% Function to convert a list of Dwell dictionaries (created by the extract/1
 %% function above) to a list of GeoJSON records suitable to passing to a 
