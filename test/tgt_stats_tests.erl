@@ -2,15 +2,15 @@
 %% Copyright 2016 Pentland Edge Ltd.
 %%
 %% Licensed under the Apache License, Version 2.0 (the "License"); you may not
-%% use this file except in compliance with the License. 
+%% use this file except in compliance with the License.
 %% You may obtain a copy of the License at
 %%
 %% http://www.apache.org/licenses/LICENSE-2.0
 %%
-%% Unless required by applicable law or agreed to in writing, software 
-%% distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
-%% WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the 
-%% License for the specific language governing permissions and limitations 
+%% Unless required by applicable law or agreed to in writing, software
+%% distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+%% WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+%% License for the specific language governing permissions and limitations
 %% under the License.
 %%
 
@@ -18,7 +18,7 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
-%% Define a test generator function to run all the tests. 
+%% Define a test generator function to run all the tests.
 tgt_stats_test_() ->
     [datetime_string_checks(), extract_check1(), geojson_check1(),
      dwell_area_to_polygon_checks()].
@@ -26,13 +26,16 @@ tgt_stats_test_() ->
 datetime_string_checks() ->
     DT = {{2016,7,27},{8,12,59}},
     TimeStr = tgt_stats:datetime_to_string(DT),
+    MS = (((8*60 + 12)*60) + 59) * 1000,
+    TimeUtc = tgt_stats:date_ms_to_utc({2016,7,27},MS),
 
-    [?_assertEqual("2016-07-27 08:12:59", TimeStr)].
+    [?_assertEqual("2016-07-27 08:12:59", TimeStr),
+     ?_assertEqual(1469607179000, TimeUtc)].
 
 extract_check1() ->
     PacketList = packet_list:get_list1(),
-    TgtStats = tgt_stats:extract(PacketList), 
-    
+    TgtStats = tgt_stats:extract(PacketList),
+
     % Expect only a single dictionary to be returned.
     [DwellDict] = TgtStats,
 
@@ -50,8 +53,8 @@ extract_check1() ->
 
 geojson_check1() ->
     PacketList = packet_list:get_list1(),
-    TgtStats = tgt_stats:extract(PacketList), 
-    
+    TgtStats = tgt_stats:extract(PacketList),
+
     % Expect only a single dictionary to be returned.
     [DwellDict] = TgtStats,
 
@@ -74,21 +77,21 @@ geojson_check1() ->
 dwell_area_to_polygon_checks() ->
     % 5km range swathe.
     RangeHalfExtentKM = 2.5,
-    DwellRangeHalfExtentM = RangeHalfExtentKM * 1000, 
+    DwellRangeHalfExtentM = RangeHalfExtentKM * 1000,
     % Dwell centre on the East Fortune runway crossing.
     % Use a 45 degree width of the dwell.
-    DwellArea = {55.999591, -2.718204, DwellRangeHalfExtentM, 22.5}, 
+    DwellArea = {55.999591, -2.718204, DwellRangeHalfExtentM, 22.5},
 
-    % Dwell altitute is expressed in cm above WGS84 ellipsoid. Convert to 
+    % Dwell altitute is expressed in cm above WGS84 ellipsoid. Convert to
     % metres before usage.
     % Use the Garvald Inn as our sensor position, at an altitude of 1000m.
     DwellAltCm = 100000,
-    DellAltM = DwellAltCm / 100.0, 
+    DellAltM = DwellAltCm / 100.0,
     SensorPos = {55.928613, -2.66116, DellAltM},
 
     {PtA, PtB, PtC, PtD} = tgt_stats:dwell_area_to_polygon(DwellArea, SensorPos),
     % Distance from sensor to dwell centre is 8654m, initial bearing 335.803889 deg.
-    % Use the online 
+    % Use the online
     {LatA, LonA} = PtA,
     {LatB, LonB} = PtB,
     {LatC, LonC} = PtC,
@@ -102,8 +105,8 @@ dwell_area_to_polygon_checks() ->
      ?_assert(almost_equal(55.983889, LatD, 0.001)),
      ?_assert(almost_equal(-2.664167, LonD, 0.001))].
 
-%% Utility function to compare whether floating point values are within a 
+%% Utility function to compare whether floating point values are within a
 %% specified range.
 almost_equal(V1, V2, Delta) ->
     abs(V1 - V2) =< Delta.
- 
+

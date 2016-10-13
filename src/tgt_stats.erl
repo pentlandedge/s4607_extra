@@ -2,26 +2,27 @@
 %% Copyright 2016 Pentland Edge Ltd.
 %%
 %% Licensed under the Apache License, Version 2.0 (the "License"); you may not
-%% use this file except in compliance with the License. 
+%% use this file except in compliance with the License.
 %% You may obtain a copy of the License at
 %%
 %% http://www.apache.org/licenses/LICENSE-2.0
 %%
-%% Unless required by applicable law or agreed to in writing, software 
-%% distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
-%% WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the 
-%% License for the specific language governing permissions and limitations 
+%% Unless required by applicable law or agreed to in writing, software
+%% distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+%% WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+%% License for the specific language governing permissions and limitations
 %% under the License.
 %%
 -module(tgt_stats).
 
 -export([
-    extract/1, 
-    dwell_dicts_to_geojson/1, 
+    extract/1,
+    dwell_dicts_to_geojson/1,
     dwell_area_to_polygon/2,
     dwell_to_geojson/1,
     datetime_to_string/1,
     date_ms_to_datetime/2,
+    date_ms_to_utc/2,
     get_bounding_area/1]).
 
 -record(stat_acc, {ref_time, dwell_list}).
@@ -36,10 +37,10 @@ extract(PacketList) when is_list(PacketList) ->
     Segs = s4607:get_segments_by_type([mission, dwell], PacketList),
 
     % Process the list of segments, accumulating statistics.
-    InitStats = #stat_acc{ref_time = 0, dwell_list = []}, 
-    #stat_acc{dwell_list = Dwells} = 
+    InitStats = #stat_acc{ref_time = 0, dwell_list = []},
+    #stat_acc{dwell_list = Dwells} =
         lists:foldl(fun process_segment/2, InitStats, Segs),
-    
+
     % Reverse the list to return it to chronological order.
     lists:reverse(Dwells).
 
@@ -53,11 +54,11 @@ process_segment(Seg, #stat_acc{} = AccStats) ->
 
 %% Process the data field of the relevant segment types.
 process_seg_data(mission, SegData, #stat_acc{} = AccStats) ->
-    % Extract the time from the mission segment and update the current 
+    % Extract the time from the mission segment and update the current
     % reference time.
-    NewRef = mission:get_time(SegData), 
+    NewRef = mission:get_time(SegData),
     AccStats#stat_acc{ref_time = NewRef};
-process_seg_data(dwell, SegData, 
+process_seg_data(dwell, SegData,
     #stat_acc{ref_time = RT, dwell_list = DL} = AccStats) ->
 
     % Turn it into a dictionary.
@@ -71,41 +72,41 @@ process_seg_data(_, _, #stat_acc{} = AccStats) ->
     AccStats.
 
 %% Function to convert a list of Dwell dictionaries (created by the extract/1
-%% function above) to a list of GeoJSON records suitable to passing to a 
+%% function above) to a list of GeoJSON records suitable to passing to a
 %% mapping client.
 dwell_dicts_to_geojson(DwellList) when is_list(DwellList) ->
     PrepList = lists:map(fun dwell_dict_prep/1, DwellList),
-    jsx:encode([{<<"data">>, PrepList}]). 
+    jsx:encode([{<<"data">>, PrepList}]).
 
-%% Collect the relevant data into a structure suitable for encoding using 
+%% Collect the relevant data into a structure suitable for encoding using
 %% the jsx library.
 dwell_dict_prep(DwellDict) ->
     % Calculate the dwell time (UTC)and convert the UTC timestamp to a string.
     DwellUTC = calculate_dwell_utc_time(DwellDict),
     TimeStr = datetime_to_string(DwellUTC),
-    
+    TimeUtc = calculate_dwell_utc_time_ms(DwellDict),
     % Extract the sensor position and dwell area parameters and use these to
     % calculate the vertices of the dwell polygon.
-    SensorPos = get_sensor_position(DwellDict), 
+    SensorPos = get_sensor_position(DwellDict),
     DwellArea = get_dwell_area(DwellDict),
     {PtA, PtB, PtC, PtD} = dwell_area_to_polygon(DwellArea, SensorPos),
 
     % Get the target reports from the dwell and convert the list to GeoJSON
     % encoding form. Uses a closure to wrap TimeStr for the map operation.
     TgtReps = dict:fetch(targets, DwellDict),
-    TgtToGeoJSON = fun(T) -> target_dict_to_geojson(T, TimeStr) end,
+    TgtToGeoJSON = fun(T) -> target_dict_to_geojson(T, TimeStr, TimeUtc) end,
     TgtGeoList = lists:map(TgtToGeoJSON, TgtReps),
 
     % Form the dwell area GeoJSON and construct our list of features.
-    DwellAreaGeo = dwell_area_to_geojson(TimeStr, PtA, PtB, PtC, PtD),
+    DwellAreaGeo = dwell_area_to_geojson(TimeStr, TimeUtc, PtA, PtB, PtC, PtD),
     FeatureList = [DwellAreaGeo|TgtGeoList],
 
     % Structure the whole lot for encoding and return to caller.
-    [{<<"type">>,<<"FeatureCollection">>}, 
-     {<<"features">>, FeatureList}]. 
+    [{<<"type">>,<<"FeatureCollection">>},
+     {<<"features">>, FeatureList}].
 
 %% Calculate the dwell UTC time from the mission base and dwell offset.
-calculate_dwell_utc_time(DwellDict) ->    
+calculate_dwell_utc_time(DwellDict) ->
     % Extract the mission and dwell times.
     MissTime = dict:fetch(mission_time, DwellDict),
     DwellTime = dict:fetch(dwell_time, DwellDict),
@@ -113,11 +114,20 @@ calculate_dwell_utc_time(DwellDict) ->
     % Convert to UTC (seconds precision).
     tgt_stats:date_ms_to_datetime(MissTime, DwellTime).
 
+%% Calculate the dwell UTC time from the mission base and dwell offset.
+calculate_dwell_utc_time_ms(DwellDict) ->
+    % Extract the mission and dwell times.
+    MissTime = dict:fetch(mission_time, DwellDict),
+    DwellTime = dict:fetch(dwell_time, DwellDict),
+
+    % Convert to UTC (seconds precision).
+    tgt_stats:date_ms_to_utc(MissTime, DwellTime).
+
 %% Convert a single dwell dictionary structure to the GeoJSON form.
 dwell_to_geojson(DwellDict) ->
     % Process the dwell dictionary, and encode it in JSON form.
     Collection = dwell_dict_prep(DwellDict),
-    jsx:encode(Collection). 
+    jsx:encode(Collection).
 
 %% Extract the dwell area parameters and convert to standard units.
 get_dwell_area(DwellDict) ->
@@ -126,13 +136,13 @@ get_dwell_area(DwellDict) ->
     CentreLon = dict:fetch(dwell_center_lon, DwellDict),
     RangeHalfExtent = dict:fetch(dwell_range_half_extent, DwellDict),
     AngleHalfExtent = dict:fetch(dwell_angle_half_extent, DwellDict),
-    
+
     %% Convert parameters to the appopriate units for calculation.
     RangeHalfExtentMetres = km_to_m(RangeHalfExtent),
 
     {CentreLat, CentreLon, RangeHalfExtentMetres, AngleHalfExtent}.
 
-%% Extract the sensor position from the dwell dict in standard units 
+%% Extract the sensor position from the dwell dict in standard units
 %% (altitude converted to metres).
 get_sensor_position(DwellDict) ->
     SensorLat = dict:fetch(sensor_lat, DwellDict),
@@ -151,19 +161,21 @@ km_to_m(Dist) -> Dist * 1000.
 cm_to_m(Dist) -> Dist / 100.
 
 %% Convert the dwell area  parameters to a form suitable for GeoJSON encoding.
-dwell_area_to_geojson(TimeStr, LatLonA, LatLonB, LatLonC, LatLonD) ->
+dwell_area_to_geojson(TimeStr, TimeUtc, LatLonA, LatLonB, LatLonC, LatLonD) ->
     PtA = latlon_tuple_to_lonlat_list(LatLonA),
     PtB = latlon_tuple_to_lonlat_list(LatLonB),
     PtC = latlon_tuple_to_lonlat_list(LatLonC),
     PtD = latlon_tuple_to_lonlat_list(LatLonD),
     [{<<"type">>, <<"Feature">>},
-     {<<"properties">>, [{<<"time">>, list_to_binary(TimeStr)}]},
-     {<<"geometry">>, [{<<"type">>, <<"Polygon">>}, 
+     {<<"properties">>, [{<<"time">>, list_to_binary(TimeStr)},
+                        {<<"start">>, TimeUtc},
+                        {<<"end">>, TimeUtc}]},
+     {<<"geometry">>, [{<<"type">>, <<"Polygon">>},
                        {<<"coordinates">>, [[PtA, PtB, PtC, PtD, PtA]]}]}].
 
 %% @doc Function to convert the dwell area parameters into a bounding polygon
 %% that can be displayed.
-%% Ignore the altitude of the sensor for now and calculate the boundary 
+%% Ignore the altitude of the sensor for now and calculate the boundary
 %% points by applying the haversine formula to give the distance between two
 %% Lat, Lon points along the arc of a great circle.
 dwell_area_to_polygon(DwellArea, SensorPos) ->
@@ -186,35 +198,44 @@ dwell_area_to_polygon(DwellArea, SensorPos) ->
 
 %% Extract the relevant fields from a target dict and produce a form suitable
 %% suitable for GeoJSON encoding.
-target_dict_to_geojson(TgtDict, TimeStr) ->
-    HrLat = dict:fetch(target_hr_lat, TgtDict), 
-    HrLon = dict:fetch(target_hr_lon, TgtDict), 
+target_dict_to_geojson(TgtDict, TimeStr, TimeUtc) ->
+    HrLat = dict:fetch(target_hr_lat, TgtDict),
+    HrLon = dict:fetch(target_hr_lon, TgtDict),
     HrLonN = case HrLon > 180.0 of
                  true -> HrLon - 360.0;
                  false -> HrLon
              end,
-    Height = dict:fetch(geodetic_height, TgtDict), 
-    gen_tgt_geojson(TimeStr, HrLat, HrLonN, Height).
+    Height = dict:fetch(geodetic_height, TgtDict),
+    gen_tgt_geojson(TimeStr, TimeUtc, HrLat, HrLonN, Height).
 
 %% Convert the target fields to a form suitable for GeoJSON encoding.
-gen_tgt_geojson(Timestamp, Lat, Lon, Alt) ->
+gen_tgt_geojson(Timestamp, TimeUtc, Lat, Lon, Alt) ->
     [{<<"type">>, <<"Feature">>},
-     {<<"properties">>, [{<<"time">>, list_to_binary(Timestamp)}]},
+     {<<"properties">>, [{<<"time">>, list_to_binary(Timestamp)},
+                        {<<"start">>, TimeUtc},
+                        {<<"end">>, TimeUtc}]},
      {<<"geometry">>, [{<<"type">>, <<"Point">>},
-                       {<<"coordinates">>, [Lon, Lat, Alt]}]}]. 
+                       {<<"coordinates">>, [Lon, Lat, Alt]}]}].
 
 %% Convert the reference date from the mission segment to a string.
 datetime_to_string({{Year,Month,Day},{Hours,Mins,Secs}}) ->
     Str = io_lib:format("~p-~2..0w-~2..0w ~2..0w:~2..0w:~2..0w",
         [Year,Month,Day,Hours,Mins,Secs]),
     lists:flatten(Str).
-    
-%% Convert the reference date from the mission segment and the offset in 
+
+%% Convert the reference date from the mission segment and the offset in
 %% milliseconds contained in the dwell segment into a datetime structure.
 date_ms_to_datetime({_Y, _M, _D} = Date, MS) ->
     RefSecs = calendar:datetime_to_gregorian_seconds({Date, {0,0,0}}),
     TotalSecs = RefSecs + (MS div 1000),
     calendar:gregorian_seconds_to_datetime(TotalSecs).
+
+%% Convert the reference date from the mission segment and the offset in
+%% milliseconds contained in the dwell segment into a epoch.
+date_ms_to_utc({_Y, _M, _D} = Date, MS) ->
+    RefSecs = calendar:datetime_to_gregorian_seconds({Date, {0,0,0}}),
+    %% Subtract the number of seconds for Unix Epoch time
+    (RefSecs - 62167219200) *1000 + MS.
 
 %% Convert {Lat, Lon} tuples to {Lon, Lat} form used by GeoJSON.
 latlon_to_lonlat({Lat,Lon}) ->
