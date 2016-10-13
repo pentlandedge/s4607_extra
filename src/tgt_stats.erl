@@ -21,7 +21,8 @@
     dwell_area_to_polygon/2,
     dwell_to_geojson/1,
     datetime_to_string/1,
-    date_ms_to_datetime/2]).
+    date_ms_to_datetime/2,
+    get_bounding_area/1]).
 
 -record(stat_acc, {ref_time, dwell_list}).
 
@@ -223,4 +224,12 @@ latlon_to_lonlat({Lat,Lon}) ->
 latlon_tuple_to_lonlat_list({_Lat, _Lon} = LatLon) ->
     LonLat = latlon_to_lonlat(LatLon),
     tuple_to_list(LonLat).
+
+%% Extract the bounding area from a job definiton segment.
+get_bounding_area(JD) ->
+    A = {job_def:get_bounding_a_lat(JD), job_def:get_bounding_a_lon(JD)},
+    B = {job_def:get_bounding_b_lat(JD), job_def:get_bounding_b_lon(JD)},
+    C = {job_def:get_bounding_c_lat(JD), job_def:get_bounding_c_lon(JD)},
+    D = {job_def:get_bounding_d_lat(JD), job_def:get_bounding_d_lon(JD)},
+    {A, B, C, D}.
 
