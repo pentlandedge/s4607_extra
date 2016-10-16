@@ -21,7 +21,7 @@
 %% Define a test generator function to run all the tests.
 tgt_stats_test_() ->
     [datetime_string_checks(), extract_check1(), geojson_check1(),
-     dwell_area_to_polygon_checks()].
+     dwell_area_to_polygon_checks(), jd_bounding_area_checks()].
 
 datetime_string_checks() ->
     DT = {{2016,7,27},{8,12,59}},
@@ -105,8 +105,43 @@ dwell_area_to_polygon_checks() ->
      ?_assert(almost_equal(55.983889, LatD, 0.001)),
      ?_assert(almost_equal(-2.664167, LonD, 0.001))].
 
+%% Test the extraction of the job definition bounding area.
+jd_bounding_area_checks() ->
+    JD = sample_job_def(),
+    Bound = tgt_stats:get_bounding_area(JD),
+    {{LatA, LonA},{LatB, LonB},{LatC, LonC},{LatD, LonD}} = Bound,
+    [?_assert(almost_equal(33.3,  LatA, 0.001)),
+     ?_assert(almost_equal(3.45,  LonA, 0.001)),
+     ?_assert(almost_equal(23.4,  LatB, 0.001)),
+     ?_assert(almost_equal(350.0, LonB, 0.001)),
+     ?_assert(almost_equal(-45.0, LatC, 0.001)),
+     ?_assert(almost_equal(2.45,  LonC, 0.001)),
+     ?_assert(almost_equal(-60.0, LatD, 0.001)),
+     ?_assert(almost_equal(140.0, LonD, 0.001))].
+
 %% Utility function to compare whether floating point values are within a
 %% specified range.
 almost_equal(V1, V2, Delta) ->
     abs(V1 - V2) =< Delta.
+
+%% Create a sample job definition segment for testing.
+sample_job_def() ->
+    job_def:new(sample_job_def_params()).
+
+sample_job_def_params() ->
+    [{job_id, 100}, {sensor_id_type, rotary_wing_radar},
+     {sensor_id_model, "Heli 1"}, {target_filt_flag, no_filtering}, {priority, 30},
+     {bounding_a_lat, 33.3}, {bounding_a_lon, 3.45},
+     {bounding_b_lat, 23.4}, {bounding_b_lon, 350},
+     {bounding_c_lat, -45.0}, {bounding_c_lon, 2.45},
+     {bounding_d_lat, -60.0}, {bounding_d_lon, 140},
+     {radar_mode, {monopulse_calibration, asars_aip}}, {nom_rev_int, 65000},
+     {ns_pos_unc_along_track, no_statement},
+     {ns_pos_unc_cross_track, 5000}, {ns_pos_unc_alt, 20000},
+     {ns_pos_unc_heading, 45}, {ns_pos_unc_sensor_speed, 65534},
+     {ns_val_slant_range_std_dev, 100},
+     {ns_val_cross_range_std_dev, no_statement},
+     {ns_val_tgt_vel_los_std_dev, 4000}, {ns_val_mdv, no_statement},
+     {ns_val_det_prob, 100}, {ns_val_false_alarm_density, 254},
+     {terr_elev_model, dgm50}, {geoid_model, geo96}].
 
