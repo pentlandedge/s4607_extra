@@ -17,7 +17,7 @@
 
 -module(packet_list).
 
--export([get_list1/0]).
+-export([get_list1/0, get_list2/0]).
 
 %% Packet List 1. Consists of a single mission segment and a single 
 %% dwell segment with a single target report.
@@ -51,6 +51,28 @@ get_list1() ->
 
     % Return the two packets as a list.
     [MissionPacket, DwellPacket].
+
+%% Packet List 2. Same as 1, but with a job definition segment prepended.
+get_list2() ->
+    % List the parameters for the packet header (no need to set size).
+    PL = [{version, {3, 1}}, {nationality, "UK"}, {classification, top_secret}, 
+          {class_system, "UK"}, {platform_id, "Pico1"}, 
+          {mission_id, 16#11223344}, 
+          {job_id, 16#55667788}],
+
+    % Create a generator function
+    Gen = s4607:packet_generator(PL),
+
+    % Create a complete segment with the header and payload.
+    JD = sample_job_def(),
+    JDSeg = segment:new(job_def, JD),
+
+    % Create a packet containing the job definition segment
+    JDPacket = Gen([JDSeg]),
+   
+    % Prepend to packet list 1.
+    PL1 = get_list1(), 
+    [JDPacket|PL1].  
 
 %% Function to create a sample dwell with a single target report in it.
 one_target_dwell() ->
@@ -94,5 +116,24 @@ one_target_dwell() ->
     % Create and return the dwell segment.
     dwell:new(P).
     
-    
+%% Create a sample job definition segment for testing.
+sample_job_def() ->
+    job_def:new(sample_job_def_params()).
+
+sample_job_def_params() ->
+    [{job_id, 100}, {sensor_id_type, rotary_wing_radar},
+     {sensor_id_model, "Heli 1"}, {target_filt_flag, no_filtering}, {priority, 30},
+     {bounding_a_lat, 33.3}, {bounding_a_lon, 3.45},
+     {bounding_b_lat, 23.4}, {bounding_b_lon, 350},
+     {bounding_c_lat, -45.0}, {bounding_c_lon, 2.45},
+     {bounding_d_lat, -60.0}, {bounding_d_lon, 140},
+     {radar_mode, {monopulse_calibration, asars_aip}}, {nom_rev_int, 65000},
+     {ns_pos_unc_along_track, no_statement},
+     {ns_pos_unc_cross_track, 5000}, {ns_pos_unc_alt, 20000},
+     {ns_pos_unc_heading, 45}, {ns_pos_unc_sensor_speed, 65534},
+     {ns_val_slant_range_std_dev, 100},
+     {ns_val_cross_range_std_dev, no_statement},
+     {ns_val_tgt_vel_los_std_dev, 4000}, {ns_val_mdv, no_statement},
+     {ns_val_det_prob, 100}, {ns_val_false_alarm_density, 254},
+     {terr_elev_model, dgm50}, {geoid_model, geo96}].
 
