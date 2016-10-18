@@ -65,7 +65,7 @@ get_list2() ->
 
     % Create a complete segment with the header and payload.
     JD = sample_job_def(),
-    JDSeg = segment:new(job_def, JD),
+    JDSeg = segment:new(job_definition, JD),
 
     % Create a packet containing the job definition segment
     JDPacket = Gen([JDSeg]),

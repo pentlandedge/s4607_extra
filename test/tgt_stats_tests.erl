@@ -21,7 +21,8 @@
 %% Define a test generator function to run all the tests.
 tgt_stats_test_() ->
     [datetime_string_checks(), extract_check1(), geojson_check1(),
-     dwell_area_to_polygon_checks(), jd_bounding_area_checks()].
+     dwell_area_to_polygon_checks(), jd_bounding_area_checks(), 
+     jd_from_packet_list_checks()].
 
 datetime_string_checks() ->
     DT = {{2016,7,27},{8,12,59}},
@@ -119,6 +120,16 @@ jd_bounding_area_checks() ->
      ?_assert(almost_equal(-60.0, LatD, 0.001)),
      ?_assert(almost_equal(140.0, LonD, 0.001))].
 
+% Extract the job definition segment from a packet list check.
+jd_from_packet_list_checks() ->
+    PackList = packet_list:get_list2(),
+    Segs = s4607:get_segments_by_type([job_definition], PackList),
+    [JobDefSeg] = Segs,
+    SH = segment:get_header(JobDefSeg),
+    _SegData = segment:get_data(JobDefSeg),
+    T = seg_header:get_segment_type(SH),
+    [?_assertEqual(T, job_definition)].
+ 
 %% Utility function to compare whether floating point values are within a
 %% specified range.
 almost_equal(V1, V2, Delta) ->
