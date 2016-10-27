@@ -126,10 +126,20 @@ jd_from_packet_list_checks() ->
     Segs = s4607:get_segments_by_type([job_definition], PackList),
     [JobDefSeg] = Segs,
     SH = segment:get_header(JobDefSeg),
-    _SegData = segment:get_data(JobDefSeg),
+    JD = segment:get_data(JobDefSeg),
     T = seg_header:get_segment_type(SH),
-    [?_assertEqual(T, job_definition)].
- 
+    Bound = tgt_stats:get_bounding_area(JD),
+    {{LatA, LonA},{LatB, LonB},{LatC, LonC},{LatD, LonD}} = Bound,
+    [?_assertEqual(T, job_definition),
+     ?_assert(almost_equal(33.3,  LatA, 0.001)),
+     ?_assert(almost_equal(3.45,  LonA, 0.001)),
+     ?_assert(almost_equal(23.4,  LatB, 0.001)),
+     ?_assert(almost_equal(350.0, LonB, 0.001)),
+     ?_assert(almost_equal(-45.0, LatC, 0.001)),
+     ?_assert(almost_equal(2.45,  LonC, 0.001)),
+     ?_assert(almost_equal(-60.0, LatD, 0.001)),
+     ?_assert(almost_equal(140.0, LonD, 0.001))].
+
 %% Utility function to compare whether floating point values are within a
 %% specified range.
 almost_equal(V1, V2, Delta) ->
