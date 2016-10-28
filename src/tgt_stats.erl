@@ -23,7 +23,8 @@
     datetime_to_string/1,
     date_ms_to_datetime/2,
     date_ms_to_utc/2,
-    get_bounding_area/1]).
+    get_bounding_area/1,
+    job_def_to_polygon/1]).
 
 -record(stat_acc, {ref_time, dwell_list}).
 
@@ -253,4 +254,9 @@ get_bounding_area(JD) ->
     C = {job_def:get_bounding_c_lat(JD), job_def:get_bounding_c_lon(JD)},
     D = {job_def:get_bounding_d_lat(JD), job_def:get_bounding_d_lon(JD)},
     {A, B, C, D}.
+
+%% Convert the job defintion bounding area into the polygon form. Simple
+%% mapping, one of the functions should probably be removed. 
+job_def_to_polygon(JobDef) ->
+    get_bounding_area(JobDef).
 

@@ -22,7 +22,7 @@
 tgt_stats_test_() ->
     [datetime_string_checks(), extract_check1(), geojson_check1(),
      dwell_area_to_polygon_checks(), jd_bounding_area_checks(), 
-     jd_from_packet_list_checks()].
+     jd_from_packet_list_checks(), job_def_to_polygon_checks()].
 
 datetime_string_checks() ->
     DT = {{2016,7,27},{8,12,59}},
@@ -132,6 +132,22 @@ jd_from_packet_list_checks() ->
     {{LatA, LonA},{LatB, LonB},{LatC, LonC},{LatD, LonD}} = Bound,
     [?_assertEqual(T, job_definition),
      ?_assert(almost_equal(33.3,  LatA, 0.001)),
+     ?_assert(almost_equal(3.45,  LonA, 0.001)),
+     ?_assert(almost_equal(23.4,  LatB, 0.001)),
+     ?_assert(almost_equal(350.0, LonB, 0.001)),
+     ?_assert(almost_equal(-45.0, LatC, 0.001)),
+     ?_assert(almost_equal(2.45,  LonC, 0.001)),
+     ?_assert(almost_equal(-60.0, LatD, 0.001)),
+     ?_assert(almost_equal(140.0, LonD, 0.001))].
+
+job_def_to_polygon_checks() ->
+    JD = sample_job_def(),
+    {PtA, PtB, PtC, PtD} = tgt_stats:job_def_to_polygon(JD),
+    {LatA, LonA} = PtA,
+    {LatB, LonB} = PtB,
+    {LatC, LonC} = PtC,
+    {LatD, LonD} = PtD,
+    [?_assert(almost_equal(33.3,  LatA, 0.001)),
      ?_assert(almost_equal(3.45,  LonA, 0.001)),
      ?_assert(almost_equal(23.4,  LatB, 0.001)),
      ?_assert(almost_equal(350.0, LonB, 0.001)),
