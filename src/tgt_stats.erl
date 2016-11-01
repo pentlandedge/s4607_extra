@@ -24,7 +24,8 @@
     date_ms_to_datetime/2,
     date_ms_to_utc/2,
     get_bounding_area/1,
-    job_def_to_polygon/1]).
+    job_def_to_polygon/1,
+    group_dwells_by_revisit/1]).
 
 -record(stat_acc, {ref_time, dwell_list}).
 
@@ -259,4 +260,26 @@ get_bounding_area(JD) ->
 %% mapping, one of the functions should probably be removed. 
 job_def_to_polygon(JobDef) ->
     get_bounding_area(JobDef).
+
+%% Function to accumulate dwell segmemts from a packet list into groups based
+%% around the revisit index. This function is doing several list traversals
+%% and constructions. It could be optimised if required.
+group_dwells_by_revisit(PacketList) when is_list(PacketList) ->
+    Segs = s4607:get_segments_by_type([dwell], PacketList),
+    SegsDataList = lists:map(fun segment:get_data/1, Segs),  
+    {Grouped, Rem} = lists:foldl(fun acc_dwells/2, {[], []}, SegsDataList),
+    {ok, lists:reverse(Grouped), lists:reverse(Rem)}.
+
+%% Function to be used with a fold. It accumulates dwell segments into 
+%% groups based on the last dwell of revisit.
+acc_dwells(Dwell, {GroupedList, CurrentRevisit}) when is_list(GroupedList), 
+    is_list(CurrentRevisit) ->
+
+    NewCurrent = [Dwell|CurrentRevisit],
+    case dwell:get_last_dwell_of_revisit(Dwell) of
+        no_additional_dwells ->
+            {[lists:reverse(NewCurrent)|GroupedList], []};
+        additional_dwells ->
+            {GroupedList, NewCurrent}
+    end.
 
