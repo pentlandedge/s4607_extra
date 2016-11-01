@@ -266,17 +266,17 @@ job_def_to_polygon(JobDef) ->
 %% and constructions. It could be optimised if required.
 group_dwells_by_revisit(PacketList) when is_list(PacketList) ->
     Segs = s4607:get_segments_by_type([dwell], PacketList),
-    SegsDataList = lists:map(fun segment:get_data/1, Segs),  
-    {Grouped, Rem} = lists:foldl(fun acc_dwells/2, {[], []}, SegsDataList),
+    {Grouped, Rem} = lists:foldl(fun acc_dwells/2, {[], []}, Segs),
     {ok, lists:reverse(Grouped), lists:reverse(Rem)}.
 
 %% Function to be used with a fold. It accumulates dwell segments into 
 %% groups based on the last dwell of revisit.
-acc_dwells(Dwell, {GroupedList, CurrentRevisit}) when is_list(GroupedList), 
+acc_dwells(DwellSeg, {GroupedList, CurrentRevisit}) when is_list(GroupedList), 
     is_list(CurrentRevisit) ->
-
-    NewCurrent = [Dwell|CurrentRevisit],
-    case dwell:get_last_dwell_of_revisit(Dwell) of
+    
+    DwellData = segment:get_data(DwellSeg),
+    NewCurrent = [DwellData|CurrentRevisit],
+    case dwell:get_last_dwell_of_revisit(DwellData) of
         no_additional_dwells ->
             {[lists:reverse(NewCurrent)|GroupedList], []};
         additional_dwells ->
