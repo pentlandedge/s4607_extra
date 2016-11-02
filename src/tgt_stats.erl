@@ -27,7 +27,7 @@
     job_def_to_polygon/1,
     group_dwells_by_revisit/1]).
 
--record(stat_acc, {ref_time, dwell_list}).
+-record(stat_acc, {ref_time, last_job_def, dwell_list}).
 
 %% Function to extract the most useful fields relating to targets present in
 %% a list of decoded s4607 packets.
@@ -55,6 +55,8 @@ process_segment(Seg, #stat_acc{} = AccStats) ->
     process_seg_data(T, SegData, AccStats).
 
 %% Process the data field of the relevant segment types.
+process_seg_data(job_definition, SegData, #stat_acc{} = AccStats) ->
+    AccStats#stat_acc{last_job_def = SegData};
 process_seg_data(mission, SegData, #stat_acc{} = AccStats) ->
     % Extract the time from the mission segment and update the current
     % reference time.
