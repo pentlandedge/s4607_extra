@@ -26,7 +26,8 @@
     date_ms_to_utc/2,
     get_bounding_area/1,
     job_def_to_polygon/1,
-    group_dwells_by_revisit/1]).
+    group_dwells_by_revisit/1,
+    grouped_dwells_to_polygon/1]).
 
 -record(stat_acc, {ref_time, last_job_def, dwell_list}).
 
@@ -157,12 +158,39 @@ get_dwell_area(DwellDict) ->
 
     {CentreLat, CentreLon, RangeHalfExtentMetres, AngleHalfExtent}.
 
+%% Extract the dwell area parameters from the segment and convert to standard
+%% units. Should be combined with the above function in due course (or one 
+%% eliminated).
+get_dwell_area_from_seg(DwellSeg) ->
+    % Extract the parameters related to the dwell area from the segment.
+    CentreLat = dwell:get_dwell_center_lat(DwellSeg),
+    CentreLon = dwell:get_dwell_center_lon(DwellSeg),
+    RangeHalfExtent = dwell:get_dwell_range_half_extent(DwellSeg),
+    AngleHalfExtent = dwell:get_dwell_angle_half_extent(DwellSeg),
+
+    %% Convert parameters to the appopriate units for calculation.
+    RangeHalfExtentMetres = km_to_m(RangeHalfExtent),
+
+    {CentreLat, CentreLon, RangeHalfExtentMetres, AngleHalfExtent}.
+
 %% Extract the sensor position from the dwell dict in standard units
 %% (altitude converted to metres).
 get_sensor_position(DwellDict) ->
     SensorLat = dict:fetch(sensor_lat, DwellDict),
     SensorLon = dict:fetch(sensor_lon, DwellDict),
     SensorAlt = dict:fetch(sensor_alt, DwellDict),
+
+    %% Convert parameters to the appopriate units for calculation.
+    SensorAltMetres = cm_to_m(SensorAlt),
+
+    {SensorLat, SensorLon, SensorAltMetres}.
+
+%% Extract the sensor position from the dwell segment in standard units
+%% (altitude converted to metres).
+get_sensor_position_from_seg(DwellSeg) ->
+    SensorLat = dwell:get_sensor_lat(DwellSeg), 
+    SensorLon = dwell:get_sensor_lon(DwellSeg),
+    SensorAlt = dwell:get_sensor_alt(DwellSeg),
 
     %% Convert parameters to the appopriate units for calculation.
     SensorAltMetres = cm_to_m(SensorAlt),
@@ -296,3 +324,19 @@ acc_dwells(DwellSeg, {GroupedList, CurrentRevisit}) when is_list(GroupedList),
             {GroupedList, NewCurrent}
     end.
 
+%% Function to extract relevant points for a grouped dwell and form a bounding
+%% polygon. Maps a list of dwell segments and creates a polygon by fusing the 
+%% dwell areas into a single polygon.
+grouped_dwells_to_polygon(GroupedDwells) ->
+    Polys = lists:map(fun dwell_seg_to_polygon/1, GroupedDwells),
+    fuse_polygons(Polys).
+
+%% Create a dwell area polygon from a dwell segment.
+dwell_seg_to_polygon(DwellSeg) ->
+    DwellArea = get_dwell_area_from_seg(DwellSeg),
+    SensorPos = get_sensor_position_from_seg(DwellSeg),
+    dwell_area_to_polygon(DwellArea, SensorPos).
+
+%% Placeholder function to fuse the polygons into a single shape.
+fuse_polygons(Polys) -> 
+    Polys.
