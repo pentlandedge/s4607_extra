@@ -27,7 +27,8 @@
     get_bounding_area/1,
     job_def_to_polygon/1,
     group_dwells_by_revisit/1,
-    grouped_dwells_to_polygon/1]).
+    grouped_dwells_to_polygon/1,
+    fuse_polygons/1]).
 
 -record(stat_acc, {ref_time, last_job_def, dwell_list}).
 
@@ -337,6 +338,21 @@ dwell_seg_to_polygon(DwellSeg) ->
     SensorPos = get_sensor_position_from_seg(DwellSeg),
     dwell_area_to_polygon(DwellArea, SensorPos).
 
-%% Placeholder function to fuse the polygons into a single shape.
-fuse_polygons(Polys) -> 
-    Polys.
+%% Experimental function to fuse the polygons into a single shape.
+%% Simply chains together the "far away edge" of the list of polygons and 
+%% returns along the near edge.
+fuse_polygons(Polys) when is_list(Polys) -> 
+    FarPoints = lists:flatten(lists:map(fun far_points/1, Polys)),
+    NearPoints = lists:flatten(lists:map(fun near_points/1, Polys)),
+    [Start|RemNear] = NearPoints,
+    PolyChain = FarPoints ++ lists:reverse(RemNear),
+    [Start|PolyChain].
+
+%% Function for extracting the far away point list.
+far_points({_, B, C, _} = _Poly) ->
+    [B, C].
+
+%% Function for extracting the near point list.
+near_points({A, _, _, D} = _Poly) ->
+    [A, D].
+
