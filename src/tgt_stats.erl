@@ -18,6 +18,7 @@
 -export([
     extract/1,
     extract_scans/1,
+    accumulate_scans/1,
     dwell_dicts_to_geojson/1,
     dwell_area_to_polygon/2,
     dwell_to_geojson/1,
@@ -31,6 +32,13 @@
     fuse_polygons/1]).
 
 -record(stat_acc, {ref_time, last_job_def, dwell_list}).
+
+%% Accumulating data as "scans" which are grouped by revisit.
+-record(scan_acc, 
+    {last_mission = none, 
+     last_job_def = none, 
+     grouped_dwells = [],
+     current_revisit = []}).
 
 %% Function to extract the most useful fields relating to targets present in
 %% a list of decoded s4607 packets.
@@ -58,6 +66,35 @@ extract_scans(PacketList) when is_list(PacketList) ->
     _Segs = s4607:get_segments_by_type(SegTypes, PacketList),
 
     ok.
+
+accumulate_scans(PacketList) when is_list(PacketList) ->
+    Segs = s4607:get_segments(PacketList),
+    ScanAcc  = lists:foldl(fun acc_scans/2, #scan_acc{}, Segs),
+    #scan_acc{grouped_dwells = GD, current_revisit = CR} = ScanAcc,
+    NewGD = lists:reverse(GD),
+    NewCR = lists:reverse(CR),
+    ScanAcc#scan_acc{grouped_dwells = NewGD, current_revisit = NewCR}. 
+
+acc_scans(Seg, ScanAcc) ->
+    SH = segment:get_header(Seg),
+    SegData = segment:get_data(Seg),
+    T = seg_header:get_segment_type(SH),
+    proc_seg(T, SegData, ScanAcc).
+
+proc_seg(mission, SegData, ScanAcc) ->
+    ScanAcc#scan_acc{last_mission = SegData};
+proc_seg(job_definition, SegData, ScanAcc) ->
+    ScanAcc#scan_acc{last_job_def = SegData};
+proc_seg(dwell, SegData, 
+    #scan_acc{current_revisit = CR, grouped_dwells = GD}) -> 
+
+    NewCurrent = [SegData|CR],
+    case dwell:get_last_dwell_of_revisit(SegData) of
+        no_additional_dwells ->
+            #scan_acc{grouped_dwells = [lists:reverse(NewCurrent)|GD], current_revisit = []};
+        additional_dwells ->
+            #scan_acc{grouped_dwells = [lists:reverse(NewCurrent)|GD], current_revisit = NewCurrent} 
+    end.
 
 %% Function to operate on each segment, extracting the required information.
 %% Accumulates statistics, designed to work with a fold.
