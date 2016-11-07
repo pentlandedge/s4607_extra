@@ -34,11 +34,10 @@
 -record(stat_acc, {ref_time, last_job_def, dwell_list}).
 
 %% Accumulating data as "scans" which are grouped by revisit.
--record(scan_acc, 
+-record(scan, 
     {last_mission = none, 
      last_job_def = none, 
-     grouped_dwells = [],
-     current_revisit = []}).
+     grouped_dwells = []}).
 
 %% Function to extract the most useful fields relating to targets present in
 %% a list of decoded s4607 packets.
@@ -69,11 +68,10 @@ extract_scans(PacketList) when is_list(PacketList) ->
 
 accumulate_scans(PacketList) when is_list(PacketList) ->
     Segs = s4607:get_segments(PacketList),
-    ScanAcc  = lists:foldl(fun acc_scans/2, #scan_acc{}, Segs),
-    #scan_acc{grouped_dwells = GD, current_revisit = CR} = ScanAcc,
-    NewGD = lists:reverse(GD),
-    NewCR = lists:reverse(CR),
-    ScanAcc#scan_acc{grouped_dwells = NewGD, current_revisit = NewCR}. 
+    ScanAcc  = lists:foldl(fun acc_scans/2, {[], #scan{}, []}, Segs),
+    {Scans, PartScan, Dwells} = ScanAcc,
+    NewScanList = lists:reverse(Scans),
+    {NewScanList, PartScan, Dwells}.
 
 acc_scans(Seg, ScanAcc) ->
     SH = segment:get_header(Seg),
@@ -81,19 +79,19 @@ acc_scans(Seg, ScanAcc) ->
     T = seg_header:get_segment_type(SH),
     proc_seg(T, SegData, ScanAcc).
 
-proc_seg(mission, SegData, ScanAcc) ->
-    ScanAcc#scan_acc{last_mission = SegData};
-proc_seg(job_definition, SegData, ScanAcc) ->
-    ScanAcc#scan_acc{last_job_def = SegData};
-proc_seg(dwell, SegData, 
-    #scan_acc{current_revisit = CR, grouped_dwells = GD}) -> 
-
-    NewCurrent = [SegData|CR],
+proc_seg(mission, SegData, {Scans, CurrScan, Dwells}) ->
+    {Scans, CurrScan#scan{last_mission = SegData}, Dwells};
+proc_seg(job_definition, SegData, {Scans, CurrScan, Dwells}) ->
+    {Scans, CurrScan#scan{last_job_def = SegData}, Dwells};
+proc_seg(dwell, SegData, {Scans, CurrScan , Dwells}) -> 
+    NewCurrent = [SegData|Dwells],
     case dwell:get_last_dwell_of_revisit(SegData) of
         no_additional_dwells ->
-            #scan_acc{grouped_dwells = [lists:reverse(NewCurrent)|GD], current_revisit = []};
+            CompleteScan = CurrScan#scan{grouped_dwells = lists:reverse(NewCurrent)},
+            % We preserve the mission and job def segs for the next scan.
+            {[CompleteScan|Scans], CurrScan, []};
         additional_dwells ->
-            #scan_acc{grouped_dwells = [lists:reverse(NewCurrent)|GD], current_revisit = NewCurrent} 
+            {Scans, CurrScan, NewCurrent} 
     end.
 
 %% Function to operate on each segment, extracting the required information.
