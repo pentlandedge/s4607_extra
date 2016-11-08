@@ -17,7 +17,6 @@
 
 -export([
     extract/1,
-    extract_scans/1,
     accumulate_scans/1,
     dwell_dicts_to_geojson/1,
     dwell_area_to_polygon/2,
@@ -55,16 +54,6 @@ extract(PacketList) when is_list(PacketList) ->
 
     % Reverse the list to return it to chronological order.
     lists:reverse(Dwells).
-
-%% Version of extract which operates on scans (a collection of dwells grouped
-%% by revisit).
-extract_scans(PacketList) when is_list(PacketList) ->
-
-    % Interested in job definition, mission and dwell segments.
-    SegTypes = [job_definition, mission, dwell],
-    _Segs = s4607:get_segments_by_type(SegTypes, PacketList),
-
-    ok.
 
 accumulate_scans(PacketList) when is_list(PacketList) ->
     Segs = s4607:get_segments(PacketList),
