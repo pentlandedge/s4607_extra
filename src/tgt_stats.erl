@@ -18,6 +18,7 @@
 -export([
     extract/1,
     accumulate_scans/1,
+    scans_to_geojson/1,
     dwell_dicts_to_geojson/1,
     dwell_area_to_polygon/2,
     dwell_to_geojson/1,
@@ -82,6 +83,40 @@ proc_seg(dwell, SegData, {Scans, CurrScan , Dwells}) ->
         additional_dwells ->
             {Scans, CurrScan, NewCurrent} 
     end.
+
+%% Function to convert a scan's worth of data to geojson.
+scans_to_geojson(ScanList) when is_list(ScanList)  ->
+    PrepList = lists:map(fun scan_prep/1, ScanList),
+    jsx:encode([{<<"data">>, PrepList}]).
+
+%% Collect the relevant data into a structure suitable for encoding using
+%% the jsx library.
+scan_prep(_Scan) ->
+    % Calculate the dwell time (UTC)and convert the UTC timestamp to a string.
+    %DwellUTC = calculate_dwell_utc_time(DwellDict),
+    %TimeStr = datetime_to_string(DwellUTC),
+    %TimeUtc = calculate_dwell_utc_time_ms(DwellDict),
+    % Extract the sensor position and dwell area parameters and use these to
+    % calculate the vertices of the dwell polygon.
+    %SensorPos = get_sensor_position(DwellDict),
+    %DwellArea = get_dwell_area(DwellDict),
+    %{PtA, PtB, PtC, PtD} = dwell_area_to_polygon(DwellArea, SensorPos),
+
+    % Get the target reports from the dwell and convert the list to GeoJSON
+    % encoding form. Uses a closure to wrap TimeStr for the map operation.
+    %TgtReps = dict:fetch(targets, DwellDict),
+    %TgtToGeoJSON = fun(T) -> target_dict_to_geojson(T, TimeStr, TimeUtc) end,
+    %TgtGeoList = lists:map(TgtToGeoJSON, TgtReps),
+
+    % Form the dwell area GeoJSON and construct our list of features.
+    %DwellAreaGeo = dwell_area_to_geojson(TimeStr, TimeUtc, PtA, PtB, PtC, PtD),
+    %FeatureList = [DwellAreaGeo|TgtGeoList],
+
+    FeatureList = [],
+    % Structure the whole lot for encoding and return to caller.
+    [{<<"type">>,<<"FeatureCollection">>},
+     {<<"features">>, FeatureList}].
+
 
 %% Function to operate on each segment, extracting the required information.
 %% Accumulates statistics, designed to work with a fold.
