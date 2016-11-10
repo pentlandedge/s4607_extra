@@ -91,9 +91,9 @@ scans_to_geojson(ScanList) when is_list(ScanList)  ->
 
 %% Collect the relevant data into a structure suitable for encoding using
 %% the jsx library.
-scan_prep(_Scan) ->
+scan_prep(Scan) ->
     % Calculate the dwell time (UTC)and convert the UTC timestamp to a string.
-    %DwellUTC = calculate_dwell_utc_time(DwellDict),
+    _DwellUTC = calculate_scan_start_utc_time(Scan),
     %TimeStr = datetime_to_string(DwellUTC),
     %TimeUtc = calculate_dwell_utc_time_ms(DwellDict),
     % Extract the sensor position and dwell area parameters and use these to
@@ -116,6 +116,18 @@ scan_prep(_Scan) ->
     % Structure the whole lot for encoding and return to caller.
     [{<<"type">>,<<"FeatureCollection">>},
      {<<"features">>, FeatureList}].
+
+%% Calculate the scan start UTC time from the mission base and dwell offset.
+calculate_scan_start_utc_time( 
+    #scan{last_mission = M, grouped_dwells = GD} = _Scan) ->
+
+    % Extract the mission and dwell times.
+    MissTime = mission:get_mission_time(M),
+    [FirstDwell|_Rest] = GD,
+    DwellTime = dwell:get_dwell_time(FirstDwell),
+
+    % Convert to UTC (seconds precision).
+    tgt_stats:date_ms_to_datetime(MissTime, DwellTime).
 
 
 %% Function to operate on each segment, extracting the required information.
