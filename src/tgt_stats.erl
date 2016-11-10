@@ -93,8 +93,8 @@ scans_to_geojson(ScanList) when is_list(ScanList)  ->
 %% the jsx library.
 scan_prep(Scan) ->
     % Calculate the dwell time (UTC)and convert the UTC timestamp to a string.
-    _DwellUTC = calculate_scan_start_utc_time(Scan),
-    %TimeStr = datetime_to_string(DwellUTC),
+    DwellUTC = calculate_scan_start_utc_time(Scan),
+    _TimeStr = datetime_to_string(DwellUTC),
     %TimeUtc = calculate_dwell_utc_time_ms(DwellDict),
     % Extract the sensor position and dwell area parameters and use these to
     % calculate the vertices of the dwell polygon.
