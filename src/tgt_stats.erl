@@ -98,7 +98,7 @@ scan_prep(Scan) ->
     _TimeUtc = calculate_scan_utc_time_ms(Scan),
     % Extract the sensor position and dwell area parameters and use these to
     % calculate the vertices of the dwell polygon.
-    %SensorPos = get_sensor_position(DwellDict),
+    _SensorPos = get_sensor_position_from_scan(Scan),
     %DwellArea = get_dwell_area(DwellDict),
     %{PtA, PtB, PtC, PtD} = dwell_area_to_polygon(DwellArea, SensorPos),
 
@@ -141,6 +141,22 @@ calculate_scan_utc_time_ms(
 
     % Convert to UTC (seconds precision).
     tgt_stats:date_ms_to_utc(MissTime, DwellTime).
+
+%% Extract the sensor position from the dwell dict in standard units
+%% (altitude converted to metres).
+get_sensor_position_from_scan(#scan{grouped_dwells = GD}) ->
+
+    % Use the position from the first dwell in the group.
+    [FirstDwell|_Rest] = GD,
+
+    SensorLat = dwell:get_sensor_lat(FirstDwell),
+    SensorLon = dwell:get_sensor_lon(FirstDwell),
+    SensorAlt = dwell:get_sensor_alt(FirstDwell),
+
+    %% Convert parameters to the appopriate units for calculation.
+    SensorAltMetres = cm_to_m(SensorAlt),
+
+    {SensorLat, SensorLon, SensorAltMetres}.
 
 %% Function to operate on each segment, extracting the required information.
 %% Accumulates statistics, designed to work with a fold.
