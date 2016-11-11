@@ -95,7 +95,7 @@ scan_prep(Scan) ->
     % Calculate the dwell time (UTC)and convert the UTC timestamp to a string.
     DwellUTC = calculate_scan_start_utc_time(Scan),
     _TimeStr = datetime_to_string(DwellUTC),
-    %TimeUtc = calculate_dwell_utc_time_ms(DwellDict),
+    _TimeUtc = calculate_scan_utc_time_ms(Scan),
     % Extract the sensor position and dwell area parameters and use these to
     % calculate the vertices of the dwell polygon.
     %SensorPos = get_sensor_position(DwellDict),
@@ -129,6 +129,18 @@ calculate_scan_start_utc_time(
     % Convert to UTC (seconds precision).
     tgt_stats:date_ms_to_datetime(MissTime, DwellTime).
 
+
+%% Calculate the dwell UTC time from the mission base and dwell offset.
+calculate_scan_utc_time_ms(
+    #scan{last_mission = M, grouped_dwells = GD} = _Scan) ->
+
+    % Extract the mission and dwell times.
+    MissTime = mission:get_mission_time(M),
+    [FirstDwell|_Rest] = GD,
+    DwellTime = dwell:get_dwell_time(FirstDwell),
+
+    % Convert to UTC (seconds precision).
+    tgt_stats:date_ms_to_utc(MissTime, DwellTime).
 
 %% Function to operate on each segment, extracting the required information.
 %% Accumulates statistics, designed to work with a fold.
