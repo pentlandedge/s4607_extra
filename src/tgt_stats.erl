@@ -91,7 +91,8 @@ scans_to_geojson(ScanList) when is_list(ScanList)  ->
 
 %% Collect the relevant data into a structure suitable for encoding using
 %% the jsx library.
-scan_prep(Scan) ->
+scan_prep(#scan{last_mission = _M, grouped_dwells = GD} = Scan) -> 
+
     % Calculate the dwell time (UTC)and convert the UTC timestamp to a string.
     DwellUTC = calculate_scan_start_utc_time(Scan),
     _TimeStr = datetime_to_string(DwellUTC),
@@ -99,8 +100,9 @@ scan_prep(Scan) ->
     % Extract the sensor position and dwell area parameters and use these to
     % calculate the vertices of the dwell polygon.
     _SensorPos = get_sensor_position_from_scan(Scan),
-    %DwellArea = get_dwell_area(DwellDict),
-    %{PtA, PtB, PtC, PtD} = dwell_area_to_polygon(DwellArea, SensorPos),
+
+    %{_PtA, _PtB, _PtC, _PtD} = grouped_dwells_to_polygon(GD),
+    _PointList = grouped_dwells_to_polygon(GD),
 
     % Get the target reports from the dwell and convert the list to GeoJSON
     % encoding form. Uses a closure to wrap TimeStr for the map operation.
