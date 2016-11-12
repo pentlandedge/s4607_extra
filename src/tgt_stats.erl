@@ -19,6 +19,7 @@
     extract/1,
     accumulate_scans/1,
     scans_to_geojson/1,
+    get_targets_from_scan/1,
     dwell_dicts_to_geojson/1,
     dwell_area_to_polygon/2,
     dwell_to_geojson/1,
@@ -91,7 +92,7 @@ scans_to_geojson(ScanList) when is_list(ScanList)  ->
 
 %% Collect the relevant data into a structure suitable for encoding using
 %% the jsx library.
-scan_prep(#scan{last_mission = _M, grouped_dwells = GD} = Scan) -> 
+scan_prep(#scan{grouped_dwells = GD} = Scan) -> 
 
     % Calculate the dwell time (UTC)and convert the UTC timestamp to a string.
     DwellUTC = calculate_scan_start_utc_time(Scan),
@@ -103,6 +104,8 @@ scan_prep(#scan{last_mission = _M, grouped_dwells = GD} = Scan) ->
 
     %{_PtA, _PtB, _PtC, _PtD} = grouped_dwells_to_polygon(GD),
     _PointList = grouped_dwells_to_polygon(GD),
+
+    _TgtReps = get_targets_from_scan(Scan),
 
     % Get the target reports from the dwell and convert the list to GeoJSON
     % encoding form. Uses a closure to wrap TimeStr for the map operation.
@@ -159,6 +162,12 @@ get_sensor_position_from_scan(#scan{grouped_dwells = GD}) ->
     SensorAltMetres = cm_to_m(SensorAlt),
 
     {SensorLat, SensorLon, SensorAltMetres}.
+
+%% Extract a flattened list of targets from the group of dwells comprising 
+%% a scan.
+get_targets_from_scan(#scan{grouped_dwells = GD}) ->
+    NestedTgts = lists:map(fun dwell:get_targets/1, GD),
+    lists:flatten(NestedTgts).
 
 %% Function to operate on each segment, extracting the required information.
 %% Accumulates statistics, designed to work with a fold.
