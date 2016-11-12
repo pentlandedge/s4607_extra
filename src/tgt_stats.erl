@@ -102,24 +102,19 @@ scan_prep(#scan{grouped_dwells = GD} = Scan) ->
     % calculate the vertices of the dwell polygon.
     _SensorPos = get_sensor_position_from_scan(Scan),
 
-    %{_PtA, _PtB, _PtC, _PtD} = grouped_dwells_to_polygon(GD),
-    _PointList = grouped_dwells_to_polygon(GD),
-
-    TgtReps = get_targets_from_scan(Scan),
-    TgtToGeoJSON = fun(T) -> target_to_geojson(T, TimeStr, TimeUtc) end,
-    _TgtGeoList = lists:map(TgtToGeoJSON, TgtReps),
+    PointList = grouped_dwells_to_polygon(GD),
 
     % Get the target reports from the dwell and convert the list to GeoJSON
-    % encoding form. Uses a closure to wrap TimeStr for the map operation.
-    %TgtReps = dict:fetch(targets, DwellDict),
-    %TgtToGeoJSON = fun(T) -> target_dict_to_geojson(T, TimeStr, TimeUtc) end,
-    %TgtGeoList = lists:map(TgtToGeoJSON, TgtReps),
+    % encoding form. Uses a closure to wrap TimeStr and TimeUTC for the map 
+    % operation.
+    TgtReps = get_targets_from_scan(Scan),
+    TgtToGeoJSON = fun(T) -> target_to_geojson(T, TimeStr, TimeUtc) end,
+    TgtGeoList = lists:map(TgtToGeoJSON, TgtReps),
 
-    % Form the dwell area GeoJSON and construct our list of features.
-    %DwellAreaGeo = dwell_area_to_geojson(TimeStr, TimeUtc, PtA, PtB, PtC, PtD),
-    %FeatureList = [DwellAreaGeo|TgtGeoList],
+    % Form the scan area GeoJSON and construct our list of features.
+    ScanAreaGeo = scan_polygon_to_geojson(TimeStr, TimeUtc, PointList),
+    FeatureList = [ScanAreaGeo|TgtGeoList],
 
-    FeatureList = [],
     % Structure the whole lot for encoding and return to caller.
     [{<<"type">>,<<"FeatureCollection">>},
      {<<"features">>, FeatureList}].
@@ -182,6 +177,23 @@ target_to_geojson(TgtRep, TimeStr, TimeUtc) ->
              end,
     Height = tgt_report:get_geodetic_height(TgtRep),
     gen_tgt_geojson(TimeStr, TimeUtc, HrLat, HrLonN, Height).
+
+%% Convert the dwell area  parameters to a form suitable for GeoJSON encoding.
+scan_polygon_to_geojson(TimeStr, TimeUtc, PolyPts) ->
+    % We need to duplicate the first point at the end of the list.
+    [Fst|_] = PolyPts,
+    Reversed = [Fst|lists:reverse(PolyPts)],
+    PolyPts2 = lists:reverse(Reversed),
+
+    % Convert tuples to the GeoJSON Lon, Lat list form.
+    GeoPts = lists:map(fun latlon_tuple_to_lonlat_list/1, PolyPts2),
+
+    [{<<"type">>, <<"Feature">>},
+     {<<"properties">>, [{<<"time">>, list_to_binary(TimeStr)},
+                        {<<"start">>, TimeUtc},
+                        {<<"end">>, TimeUtc}]},
+     {<<"geometry">>, [{<<"type">>, <<"Polygon">>},
+                       {<<"coordinates">>, [GeoPts]}]}].
 
 %% Function to operate on each segment, extracting the required information.
 %% Accumulates statistics, designed to work with a fold.
