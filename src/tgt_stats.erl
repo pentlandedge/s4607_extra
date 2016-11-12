@@ -96,8 +96,8 @@ scan_prep(#scan{grouped_dwells = GD} = Scan) ->
 
     % Calculate the dwell time (UTC)and convert the UTC timestamp to a string.
     DwellUTC = calculate_scan_start_utc_time(Scan),
-    _TimeStr = datetime_to_string(DwellUTC),
-    _TimeUtc = calculate_scan_utc_time_ms(Scan),
+    TimeStr = datetime_to_string(DwellUTC),
+    TimeUtc = calculate_scan_utc_time_ms(Scan),
     % Extract the sensor position and dwell area parameters and use these to
     % calculate the vertices of the dwell polygon.
     _SensorPos = get_sensor_position_from_scan(Scan),
@@ -105,7 +105,9 @@ scan_prep(#scan{grouped_dwells = GD} = Scan) ->
     %{_PtA, _PtB, _PtC, _PtD} = grouped_dwells_to_polygon(GD),
     _PointList = grouped_dwells_to_polygon(GD),
 
-    _TgtReps = get_targets_from_scan(Scan),
+    TgtReps = get_targets_from_scan(Scan),
+    TgtToGeoJSON = fun(T) -> target_to_geojson(T, TimeStr, TimeUtc) end,
+    _TgtGeoList = lists:map(TgtToGeoJSON, TgtReps),
 
     % Get the target reports from the dwell and convert the list to GeoJSON
     % encoding form. Uses a closure to wrap TimeStr for the map operation.
@@ -168,6 +170,18 @@ get_sensor_position_from_scan(#scan{grouped_dwells = GD}) ->
 get_targets_from_scan(#scan{grouped_dwells = GD}) ->
     NestedTgts = lists:map(fun dwell:get_targets/1, GD),
     lists:flatten(NestedTgts).
+
+%% Extract the relevant fields from a target report and produce a form suitable
+%% suitable for GeoJSON encoding.
+target_to_geojson(TgtRep, TimeStr, TimeUtc) ->
+    HrLat = tgt_report:get_target_hr_lat(TgtRep),
+    HrLon = tgt_report:get_target_hr_lon(TgtRep),
+    HrLonN = case HrLon > 180.0 of
+                 true -> HrLon - 360.0;
+                 false -> HrLon
+             end,
+    Height = tgt_report:get_geodetic_height(TgtRep),
+    gen_tgt_geojson(TimeStr, TimeUtc, HrLat, HrLonN, Height).
 
 %% Function to operate on each segment, extracting the required information.
 %% Accumulates statistics, designed to work with a fold.
