@@ -30,7 +30,8 @@
     job_def_to_polygon/1,
     group_dwells_by_revisit/1,
     grouped_dwells_to_polygon/1,
-    fuse_polygons/1]).
+    fuse_polygons/1,
+    fuse_polygons2/1]).
 
 -record(stat_acc, {ref_time, last_job_def, dwell_list}).
 
@@ -491,4 +492,19 @@ far_points({_, B, C, _} = _Poly) ->
 %% Function for extracting the near point list.
 near_points({A, _, _, D} = _Poly) ->
     [A, D].
+
+%% Alternative version which takes only two points from each individual dwell 
+%% polygon except for the last, in which all four are taken.
+fuse_polygons2(Polys) when is_list(Polys) -> 
+    {NearPoints, FarPoints} = acc_edges(Polys, [], []), 
+    [Start|RemNear] = NearPoints,
+    PolyChain = FarPoints ++ lists:reverse(RemNear),
+    [Start|PolyChain].
+    
+acc_edges([], NearEdge, FarEdge) ->
+    {lists:reverse(NearEdge), lists:reverse(FarEdge)};
+acc_edges([{A, B, C, D}], NearEdge, FarEdge) ->
+    acc_edges([], [D,A|NearEdge], [C,B|FarEdge]);
+acc_edges([{A, B, _, _}|Rest], NearEdge, FarEdge) ->
+    acc_edges(Rest, [A|NearEdge], [B|FarEdge]).
 
