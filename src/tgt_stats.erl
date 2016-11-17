@@ -467,7 +467,7 @@ acc_dwells(DwellSeg, {GroupedList, CurrentRevisit}) when is_list(GroupedList),
 %% dwell areas into a single polygon.
 grouped_dwells_to_polygon(GroupedDwells) ->
     Polys = lists:map(fun dwell_seg_to_polygon/1, GroupedDwells),
-    fuse_polygons(Polys).
+    fuse_polygons2(Polys).
 
 %% Create a dwell area polygon from a dwell segment.
 dwell_seg_to_polygon(DwellSeg) ->
