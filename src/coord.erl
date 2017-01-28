@@ -22,6 +22,7 @@
     haversine_distance/2,
     initial_bearing/2,
     destination/3,
+    ecef_to_enu/6,
     fmod/2]).
 
 %% WGS84 constants.
@@ -146,6 +147,32 @@ destination({StartLat, StartLon}, Bearing, Distance) ->
     LonDeg = rad_to_deg(LonRad2),
     NormLonDeg = fmod((LonDeg + 540.0), 360.0) - 180.0,  
     {LatDeg, NormLonDeg}.
+
+%% Convert ECEF coordinates to ENU (East, North, Up) local plane.
+%% Based on the formulae at:
+%% http://wiki.gis.com/wiki/index.php/Geodetic_system#From_WGS-84_to_ENU:_sample_code
+ecef_to_enu(RefLat, RefLon, RefH, X, Y, Z) ->
+    % Find reference location in ECEF.
+    {Xr, Yr, Zr} = lla_to_ecef({RefLat,RefLon,RefH}),
+
+    % Convert the Lat, Lon into radians.
+    LatRad = deg_to_rad(RefLat),
+    LonRad = deg_to_rad(RefLon),
+
+    SinRefLat = math:sin(LatRad), 
+    SinRefLon = math:sin(LonRad), 
+    CosRefLat = math:cos(LatRad), 
+    CosRefLon = math:cos(LonRad), 
+
+    Xdiff = X - Xr,
+    Ydiff = Y - Yr,
+    Zdiff = Z - Zr,
+
+    E = -SinRefLon*Xdiff + CosRefLon*Ydiff,
+    N = -SinRefLat*CosRefLon*Xdiff - SinRefLat*SinRefLon*Ydiff + CosRefLat*Zdiff,
+    U = CosRefLat*CosRefLon*Xdiff + CosRefLat*SinRefLon*Ydiff + SinRefLat*Zdiff,
+    
+    {E, N, U}.
 
 %% Calculate the floating point remainder. Referenced rvirding's luerl.
 fmod(X, Y) ->
