@@ -31,7 +31,8 @@
     group_dwells_by_revisit/1,
     grouped_dwells_to_polygon/1,
     fuse_polygons/1,
-    fuse_polygons2/1]).
+    fuse_polygons2/1,
+    fuse_polygons3/1]).
 
 -record(stat_acc, {ref_time, last_job_def, dwell_list}).
 
@@ -500,7 +501,19 @@ fuse_polygons2(Polys) when is_list(Polys) ->
     [Start|RemNear] = NearPoints,
     PolyChain = FarPoints ++ lists:reverse(RemNear),
     [Start|PolyChain].
+
+%% Third alternative which calculates a convex hull of the set of points.
+fuse_polygons3(_Polys) when is_list(_Polys) -> 
+    % Get the list of polygons as a flat list of points.
+
+    % Convert all of the points to a single ENU frame (keeping track of 
+    % original coordinates).
     
+    % Compute the convex hull in the 2D ENU frame.
+   
+    % Return the original Lat, Lon coordinates of the points on the hull.
+    ok.
+
 acc_edges([], NearEdge, FarEdge) ->
     {lists:reverse(NearEdge), lists:reverse(FarEdge)};
 acc_edges([{A, B, C, D}], NearEdge, FarEdge) ->
