@@ -18,11 +18,12 @@
 -export([
     lla_to_ecef/1, 
     ecef_distance/2,
+    enu_distance/2,
     deg_to_rad/1, 
     haversine_distance/2,
     initial_bearing/2,
     destination/3,
-    ecef_to_enu/6,
+    ecef_to_enu/2,
     fmod/2]).
 
 %% WGS84 constants.
@@ -61,11 +62,19 @@ lla_to_ecef({Lat,Lon,Alt}) ->
 
     {X, Y, Z}.
 
+%% @doc Calculate the magnitude of the difference between two points 
+%% specified in ECEF format.
 ecef_distance({X1, Y1, Z1}, {X2, Y2, Z2}) ->
     T1 = math:pow(X2 - X1, 2),
     T2 = math:pow(Y2 - Y1, 2),
     T3 = math:pow(Z2 - Z1, 2),
     math:sqrt(T1 + T2 + T3).
+
+%% @doc Calculate the magnitude of the difference between two points 
+%% specified in ENU format.
+enu_distance(Pt1, Pt2) ->
+    % Can reuse ECEF distance since both are vector magnitude calculations.
+    ecef_distance(Pt1, Pt2).
 
 deg_to_rad(Deg) ->
     Deg * math:pi() / 180.
@@ -151,7 +160,7 @@ destination({StartLat, StartLon}, Bearing, Distance) ->
 %% Convert ECEF coordinates to ENU (East, North, Up) local plane.
 %% Based on the formulae at:
 %% http://wiki.gis.com/wiki/index.php/Geodetic_system#From_WGS-84_to_ENU:_sample_code
-ecef_to_enu(RefLat, RefLon, RefH, X, Y, Z) ->
+ecef_to_enu({RefLat,RefLon,RefH}, {X, Y, Z}) ->
     % Find reference location in ECEF.
     {Xr, Yr, Zr} = lla_to_ecef({RefLat,RefLon,RefH}),
 

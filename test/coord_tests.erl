@@ -21,7 +21,8 @@
 %% Define a test generator function to run all the tests. 
 coord_test_() ->
     [lla_to_ecef_checks(), ecef_distance_checks(), haversine_checks(), 
-     initial_bearing_checks(), destination_checks()].
+     initial_bearing_checks(), destination_checks(),
+     ecef_to_enu_checks()].
 
 lla_to_ecef_checks() ->
     % Start with a point on the equator.
@@ -78,6 +79,20 @@ destination_checks() ->
 
     [?_assert(almost_equal(56.001, Lat, 0.001)),
      ?_assert(almost_equal(-2.734, Lon, 0.001))].
+
+ecef_to_enu_checks() ->
+    % Take a couple of points that are close together on the surface of the
+    % earth. Compute the distance between them using two separate methods
+    % and check that the answers are not too far apart.
+    Pt1 = {55.9987, -2.71, 0},
+    Pt2 = {55.9986, -2.71, 0},
+    Pt1ECEF = coord:lla_to_ecef(Pt1),
+    Pt2ECEF = coord:lla_to_ecef(Pt2),
+    DistECEF = coord:ecef_distance(Pt1ECEF, Pt2ECEF),
+    Pt1ENU = coord:ecef_to_enu(Pt1, Pt1ECEF),  
+    Pt2ENU = coord:ecef_to_enu(Pt1, Pt2ECEF),  
+    DistENU = coord:enu_distance(Pt1ENU, Pt2ENU),
+    [?_assert(almost_equal(DistECEF, DistENU, 0.001))].
 
 %% Utility function to compare whether floating point values are within a 
 %% specified range.
