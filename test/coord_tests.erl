@@ -92,7 +92,14 @@ ecef_to_enu_checks() ->
     Pt1ENU = coord:ecef_to_enu(Pt1, Pt1ECEF),  
     Pt2ENU = coord:ecef_to_enu(Pt1, Pt2ECEF),  
     DistENU = coord:enu_distance(Pt1ENU, Pt2ENU),
-    [?_assert(almost_equal(DistECEF, DistENU, 0.001))].
+    % Add a third point.
+    Pt3 = {55.9987, -2.7101, 0},
+    Pt3ECEF = coord:lla_to_ecef(Pt3),
+    DistECEF3 = coord:ecef_distance(Pt1ECEF, Pt3ECEF),
+    Pt3ENU = coord:ecef_to_enu(Pt1, Pt3ECEF),
+    DistENU3 = coord:enu_distance(Pt1ENU, Pt3ENU),
+    [?_assert(almost_equal(DistECEF, DistENU, 0.001)),
+     ?_assert(almost_equal(DistECEF3, DistENU3, 0.001))].
 
 %% Utility function to compare whether floating point values are within a 
 %% specified range.
