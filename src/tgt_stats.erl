@@ -503,8 +503,11 @@ fuse_polygons2(Polys) when is_list(Polys) ->
     [Start|PolyChain].
 
 %% Third alternative which calculates a convex hull of the set of points.
-fuse_polygons3(_Polys) when is_list(_Polys) -> 
-    % Get the list of polygons as a flat list of points.
+fuse_polygons3(Polys) when is_list(Polys) -> 
+    % Convert the list of tuples to a list of lists.
+    L1 = lists:map(fun tuple_to_list/1, Polys),
+    % Flatten the list. 
+    L2 = lists:flatten(L1),
 
     % Convert all of the points to a single ENU frame (keeping track of 
     % original coordinates).
@@ -512,7 +515,7 @@ fuse_polygons3(_Polys) when is_list(_Polys) ->
     % Compute the convex hull in the 2D ENU frame.
    
     % Return the original Lat, Lon coordinates of the points on the hull.
-    ok.
+    L2.
 
 acc_edges([], NearEdge, FarEdge) ->
     {lists:reverse(NearEdge), lists:reverse(FarEdge)};
