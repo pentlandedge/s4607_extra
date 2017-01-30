@@ -17,13 +17,9 @@
 %% be supplied as a list of {X,Y} tuples.
 %% Internally, we could do this with lists or possibly a digraph.
 quickhull(Points) ->
-    % Start by sorting the list on the X coord.
-    Sorted = lists:keysort(1, Points),
-    % Take the leftmost and rightmost points, A and B.
-    [A|Rest] = Sorted,
-    [B|Rest2] = lists:reverse(Rest),
-    {S1, S2} = divide_points(Rest2, A, B),
-    findhull(A, B, S2) ++ findhull(B, A, S1).
+    RefPoints = add_reference(Points),
+    HullPoints = quickhull2(RefPoints),
+    del_reference(HullPoints).
 
 %% Alternate version of the quickhull algorithm that allows the user to 
 %% supply a reference parameter. This is intended to allow the original
@@ -53,6 +49,9 @@ findhull(P, Q, Sk) ->
 %% a line joining two points A and B.
 %% Note: need to add a check for collinear points.
 is_left({Ax,Ay}, {Bx,By}, {Cx,Cy}) ->
+    R = undefined,
+    is_left({Ax,Ay,R}, {Bx,By,R}, {Cx,Cy,R});
+is_left({Ax,Ay,_}, {Bx,By,_}, {Cx,Cy,_}) ->
      CP = ((Bx - Ax)*(Cy - Ay) - (By - Ay)*(Cx - Ax)), 
      CP > 0. 
 
@@ -88,7 +87,7 @@ divide_points(Points, A, B) ->
 
 %% Function to calculate the distance of a point C from a line defined by two
 %% other points A and B.
-distance_from_line({Ax,Ay}, {Bx,By}, {Cx,Cy}) ->
+distance_from_line({Ax,Ay,_}, {Bx,By,_}, {Cx,Cy,_}) ->
     Xdiff = Bx - Ax,
     Ydiff = By - Ay, 
     Num = abs(Cx*Ydiff - Cy*Xdiff + Bx*Ay - By*Ax),
@@ -109,4 +108,13 @@ take_furthest_from_line(A, B, [First|Rest]) ->
         end,
     Distance = distance_from_line(A, B, First),
     lists:foldl(F, {First, Distance, []}, Rest).
+
+%% Add a dummy reference parameter to a list of two element points.
+add_reference(Points) when is_list(Points) ->
+    F = fun({X,Y}) -> {X,Y,undefined} end,
+    lists:map(F, Points).
+
+del_reference(Points) when is_list(Points) ->
+    F = fun({X,Y,_}) -> {X,Y} end,
+    lists:map(F, Points).
 
