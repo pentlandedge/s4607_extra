@@ -4,6 +4,7 @@
 
 -export([
     quickhull/1, 
+    quickhull2/1, 
     is_left/3, 
     take_right_of_line/3,
     inside_triangle/4, 
@@ -16,6 +17,19 @@
 %% be supplied as a list of {X,Y} tuples.
 %% Internally, we could do this with lists or possibly a digraph.
 quickhull(Points) ->
+    % Start by sorting the list on the X coord.
+    Sorted = lists:keysort(1, Points),
+    % Take the leftmost and rightmost points, A and B.
+    [A|Rest] = Sorted,
+    [B|Rest2] = lists:reverse(Rest),
+    {S1, S2} = divide_points(Rest2, A, B),
+    findhull(A, B, S2) ++ findhull(B, A, S1).
+
+%% Alternate version of the quickhull algorithm that allows the user to 
+%% supply a reference parameter. This is intended to allow the original
+%% Lat, Lon mappings and similar to be retained, avoiding the need to 
+%% perform the reverse coordinate frame conversion.
+quickhull2(Points) ->
     % Start by sorting the list on the X coord.
     Sorted = lists:keysort(1, Points),
     % Take the leftmost and rightmost points, A and B.
