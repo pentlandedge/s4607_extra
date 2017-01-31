@@ -511,11 +511,13 @@ fuse_polygons3(Polys) when is_list(Polys) ->
 
     % Convert all of the points to a single ENU frame (keeping track of 
     % original coordinates).
+    ENUref = lla_to_enu_with_ref(L2),
     
     % Compute the convex hull in the 2D ENU frame.
-   
-    % Return the original Lat, Lon coordinates of the points on the hull.
-    L2.
+    Hull = convex_hull:quickhull2(ENUref),
+
+    % Extract the reference (Lat,Lon,Alt) fields from each point.
+    [Ref || {_E, _N, Ref} <- Hull]. 
 
 acc_edges([], NearEdge, FarEdge) ->
     {lists:reverse(NearEdge), lists:reverse(FarEdge)};
@@ -523,4 +525,16 @@ acc_edges([{A, B, C, D}], NearEdge, FarEdge) ->
     acc_edges([], [D,A|NearEdge], [C,B|FarEdge]);
 acc_edges([{A, B, _, _}|Rest], NearEdge, FarEdge) ->
     acc_edges(Rest, [A|NearEdge], [B|FarEdge]).
+
+%% Convert a list of Lat,Lon,Alt points to a list of ENU X,Y tuples with the
+%% original LLA coordinates tagged on the end as the reference. This removes
+%% the need for a reverse conversion later.
+lla_to_enu_with_ref(Points) when is_list(Points) ->
+    [FirstLLA|_] = Points,
+    F = fun(LLA) -> 
+            ECEF = coord:lla_to_ecef(LLA),
+            {E, N, _} = coord:ecef_to_enu(FirstLLA, ECEF),
+            {E, N, LLA}
+        end,
+    lists:map(F, Points).
 
