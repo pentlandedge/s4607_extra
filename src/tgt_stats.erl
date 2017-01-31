@@ -468,7 +468,7 @@ acc_dwells(DwellSeg, {GroupedList, CurrentRevisit}) when is_list(GroupedList),
 %% dwell areas into a single polygon.
 grouped_dwells_to_polygon(GroupedDwells) ->
     Polys = lists:map(fun dwell_seg_to_polygon/1, GroupedDwells),
-    fuse_polygons2(Polys).
+    fuse_polygons3(Polys).
 
 %% Create a dwell area polygon from a dwell segment.
 dwell_seg_to_polygon(DwellSeg) ->
@@ -508,7 +508,7 @@ fuse_polygons3(Polys) when is_list(Polys) ->
     L1 = lists:map(fun tuple_to_list/1, Polys),
     % Flatten the list. 
     L2 = lists:flatten(L1),
-
+    
     % Convert all of the points to a single ENU frame (keeping track of 
     % original coordinates).
     ENUref = lla_to_enu_with_ref(L2),
@@ -530,11 +530,14 @@ acc_edges([{A, B, _, _}|Rest], NearEdge, FarEdge) ->
 %% original LLA coordinates tagged on the end as the reference. This removes
 %% the need for a reverse conversion later.
 lla_to_enu_with_ref(Points) when is_list(Points) ->
-    [FirstLLA|_] = Points,
-    F = fun(LLA) -> 
+    [{FLat,FLon}|_] = Points,
+    FirstLLA = {FLat,FLon,0},
+    F = fun(LatLon) -> 
+            {Lat,Lon} = LatLon, 
+            LLA = {Lat, Lon, 0},
             ECEF = coord:lla_to_ecef(LLA),
             {E, N, _} = coord:ecef_to_enu(FirstLLA, ECEF),
-            {E, N, LLA}
+            {E, N, LatLon}
         end,
     lists:map(F, Points).
 
