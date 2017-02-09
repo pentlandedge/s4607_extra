@@ -30,9 +30,7 @@
     job_def_to_polygon/1,
     group_dwells_by_revisit/1,
     grouped_dwells_to_polygon/1,
-    fuse_polygons/1,
-    fuse_polygons2/1,
-    fuse_polygons3/1]).
+    fuse_polygons/1]).
 
 -record(stat_acc, {ref_time, last_job_def, dwell_list}).
 
@@ -468,7 +466,7 @@ acc_dwells(DwellSeg, {GroupedList, CurrentRevisit}) when is_list(GroupedList),
 %% dwell areas into a single polygon.
 grouped_dwells_to_polygon(GroupedDwells) ->
     Polys = lists:map(fun dwell_seg_to_polygon/1, GroupedDwells),
-    fuse_polygons3(Polys).
+    fuse_polygons(Polys).
 
 %% Create a dwell area polygon from a dwell segment.
 dwell_seg_to_polygon(DwellSeg) ->
@@ -476,34 +474,8 @@ dwell_seg_to_polygon(DwellSeg) ->
     SensorPos = get_sensor_position_from_seg(DwellSeg),
     dwell_area_to_polygon(DwellArea, SensorPos).
 
-%% Experimental function to fuse the polygons into a single shape.
-%% Simply chains together the "far away edge" of the list of polygons and 
-%% returns along the near edge.
-fuse_polygons(Polys) when is_list(Polys) -> 
-    FarPoints = lists:flatten(lists:map(fun far_points/1, Polys)),
-    NearPoints = lists:flatten(lists:map(fun near_points/1, Polys)),
-    [Start|RemNear] = NearPoints,
-    PolyChain = FarPoints ++ lists:reverse(RemNear),
-    [Start|PolyChain].
-
-%% Function for extracting the far away point list.
-far_points({_, B, C, _} = _Poly) ->
-    [B, C].
-
-%% Function for extracting the near point list.
-near_points({A, _, _, D} = _Poly) ->
-    [A, D].
-
-%% Alternative version which takes only two points from each individual dwell 
-%% polygon except for the last, in which all four are taken.
-fuse_polygons2(Polys) when is_list(Polys) -> 
-    {NearPoints, FarPoints} = acc_edges(Polys, [], []), 
-    [Start|RemNear] = NearPoints,
-    PolyChain = FarPoints ++ lists:reverse(RemNear),
-    [Start|PolyChain].
-
 %% Third alternative which calculates a convex hull of the set of points.
-fuse_polygons3(Polys) when is_list(Polys) -> 
+fuse_polygons(Polys) when is_list(Polys) -> 
     % Convert the list of tuples to a list of lists.
     L1 = lists:map(fun tuple_to_list/1, Polys),
     % Flatten the list. 
@@ -518,13 +490,6 @@ fuse_polygons3(Polys) when is_list(Polys) ->
 
     % Extract the reference (Lat,Lon,Alt) fields from each point.
     [Ref || {_E, _N, Ref} <- Hull]. 
-
-acc_edges([], NearEdge, FarEdge) ->
-    {lists:reverse(NearEdge), lists:reverse(FarEdge)};
-acc_edges([{A, B, C, D}], NearEdge, FarEdge) ->
-    acc_edges([], [D,A|NearEdge], [C,B|FarEdge]);
-acc_edges([{A, B, _, _}|Rest], NearEdge, FarEdge) ->
-    acc_edges(Rest, [A|NearEdge], [B|FarEdge]).
 
 %% Convert a list of Lat,Lon,Alt points to a list of ENU X,Y tuples with the
 %% original LLA coordinates tagged on the end as the reference. This removes
