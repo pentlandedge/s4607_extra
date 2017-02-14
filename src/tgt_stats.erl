@@ -20,7 +20,6 @@
     accumulate_scans/1,
     scans_to_geojson/1,
     get_targets_from_scan/1,
-    dwell_dicts_to_geojson/1,
     dwell_area_to_polygon/2,
     dwell_to_geojson/1,
     datetime_to_string/1,
@@ -236,13 +235,6 @@ process_seg_data(dwell, SegData,
     AccStats#stat_acc{dwell_list = NewDwellList};
 process_seg_data(_, _, #stat_acc{} = AccStats) ->
     AccStats.
-
-%% Function to convert a list of Dwell dictionaries (created by the extract/1
-%% function above) to a list of GeoJSON records suitable to passing to a
-%% mapping client.
-dwell_dicts_to_geojson(DwellList) when is_list(DwellList) ->
-    PrepList = lists:map(fun dwell_dict_prep/1, DwellList),
-    jsx:encode([{<<"data">>, PrepList}]).
 
 %% Collect the relevant data into a structure suitable for encoding using
 %% the jsx library.
