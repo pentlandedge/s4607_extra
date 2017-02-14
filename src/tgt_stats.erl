@@ -124,7 +124,15 @@ calculate_scan_start_utc_time(
     #scan{last_mission = M, grouped_dwells = GD} = _Scan) ->
 
     % Extract the mission and dwell times.
-    MissTime = mission:get_time(M),
+    % We may not have received a mission segment, default to 1970 epoch to 
+    % make it clear that the data is invalid. 
+    case M of 
+        none -> 
+            MissTime = {1970, 1, 1};
+        _    ->
+            MissTime = mission:get_time(M)
+    end, 
+
     [FirstDwell|_Rest] = GD,
     DwellTime = dwell:get_dwell_time(FirstDwell),
 
