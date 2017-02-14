@@ -145,7 +145,12 @@ calculate_scan_utc_time_ms(
     #scan{last_mission = M, grouped_dwells = GD} = _Scan) ->
 
     % Extract the mission and dwell times.
-    MissTime = mission:get_time(M),
+    case M of 
+        none -> 
+            MissTime = {1970, 1, 1};
+        _    ->
+            MissTime = mission:get_time(M)
+    end, 
     [FirstDwell|_Rest] = GD,
     DwellTime = dwell:get_dwell_time(FirstDwell),
 
