@@ -20,7 +20,7 @@
 
 %% Define a test generator function to run all the tests.
 tgt_stats_test_() ->
-    [datetime_string_checks(), extract_check1(), geojson_check1(),
+    [datetime_string_checks(), extract_check1(), 
      dwell_area_to_polygon_checks(), jd_bounding_area_checks(), 
      jd_from_packet_list_checks(), job_def_to_polygon_checks()].
 
@@ -51,29 +51,6 @@ extract_check1() ->
 
     [?_assertEqual({2016, 7, 28}, MissTime),
      ?_assertEqual({{2016, 7, 28},{0, 16, 40}}, DwellUTC)].
-
-geojson_check1() ->
-    PacketList = packet_list:get_list1(),
-    TgtStats = tgt_stats:extract(PacketList),
-
-    % Expect only a single dictionary to be returned.
-    [DwellDict] = TgtStats,
-
-    % Convert it to GeoJSON format.
-    GJ = tgt_stats:dwell_to_geojson(DwellDict),
-
-    % Extract the first part of the GeoJSON containing type.
-    <<TypeStr:27/binary,Text2:52/binary,TimeStr:21/binary,_Rest/binary>> = GJ,
-
-    % Next bit of the file should look like this.
-    F2 = <<",\"features\":[{\"type\":\"Feature\",\"properties\":{\"time\":">>,
-
-    % This is the expected dwell time.
-    DwellTime = <<"\"2016-07-28 00:16:40\"">>,
-
-    [?_assertEqual(<<"{\"type\":\"FeatureCollection\"">>, TypeStr),
-     ?_assertEqual(F2, Text2),
-     ?_assertEqual(DwellTime, TimeStr)].
 
 dwell_area_to_polygon_checks() ->
     % 5km range swathe.
