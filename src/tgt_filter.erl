@@ -15,8 +15,23 @@ filter_targets_in_packetlist(Pred, PacketList) when is_function(Pred),
         end,
     lists:map(F, PacketList).
 
+%% Filters targets in a single packet.
 filter_targets_in_packet(Pred, Packet) when is_function(Pred) ->
-    Packet.
+    Segs = s4607:get_packet_segments(Packet),
+    F = fun(Seg) ->
+            SegHdr = segment:get_header(Seg),
+            SegType = seg_header:get_type(SegHdr), 
+            case SegType of 
+                dwell ->
+                    DwellData = segment:get_data(Seg),
+                    NewDwellData = filter_dwell_targets(Pred, DwellData),
+                    s4607:update_segment_data(Seg, NewDwellData);
+                _     ->
+                    Seg
+            end
+        end,
+    NewSegs = lists:map(F, Segs), 
+    s4607:update_segments_in_packet(Packet, NewSegs).
 
 %% Appies the predicate to the targets in the dwell segment and constructs a
 %% new dwell segment.
