@@ -1,10 +1,22 @@
 -module(tgt_filter).
 
 -export([
+    filter_targets_in_packetlist/2,
     filter_dwell_targets/2, 
     filter_targets/2, 
     box_pred/3,
     create_target_pred/2]).
+
+%% Applies the predicate function to the targets in the list of packets.
+filter_targets_in_packetlist(Pred, PacketList) when is_function(Pred), 
+    is_list(PacketList) ->
+    F = fun(Packet) ->
+            filter_targets_in_packet(Pred, Packet)
+        end,
+    lists:map(F, PacketList).
+
+filter_targets_in_packet(Pred, Packet) when is_function(Pred) ->
+    Packet.
 
 %% Appies the predicate to the targets in the dwell segment and constructs a
 %% new dwell segment.
