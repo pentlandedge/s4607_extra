@@ -15,10 +15,19 @@ filter_dwells_in_packetlist(Pred, PacketList) when is_function(Pred),
     is_list(PacketList) ->
     F = fun(Packet, {RefDate, AccPktList}) ->
             %filter_dwells_in_packet(Pred, Packet)
-            {RefDate, [Packet|AccPktList]}
+            case update_packet(Pred, Packet, RefDate) of
+                {ok, Pkt, RefDate} ->
+                    {RefDate, [Pkt|AccPktList]};
+                {drop, _, RefDate} ->
+                    {RefDate, AccPktList}
+            end
         end,
     {_, ReversedList} = lists:foldl(F, {{1970,1,1},[]}, PacketList),
     lists:reverse(ReversedList).
+
+%% Function to update a packet
+update_packet(_Pred, Packet, RefDate) ->
+    {ok, Packet, RefDate}.
 
 %% Applies the predicate function to the targets in the list of packets.
 filter_targets_in_packetlist(Pred, PacketList) when is_function(Pred), 
