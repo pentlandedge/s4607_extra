@@ -18,7 +18,7 @@ filter_dwells_in_packetlist(Pred, PacketList) when is_function(Pred),
             case update_packet(Pred, Packet, RefDate) of
                 {ok, Pkt, RefDate} ->
                     {RefDate, [Pkt|AccPktList]};
-                {drop, _, RefDate} ->
+                drop ->
                     {RefDate, AccPktList}
             end
         end,
@@ -27,6 +27,7 @@ filter_dwells_in_packetlist(Pred, PacketList) when is_function(Pred),
 
 %% Function to update a packet
 update_packet(_Pred, Packet, RefDate) ->
+    _Segs = s4607:get_packet_segments(Packet),
     {ok, Packet, RefDate}.
 
 %% Applies the predicate function to the targets in the list of packets.
