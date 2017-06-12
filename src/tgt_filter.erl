@@ -1,11 +1,24 @@
 -module(tgt_filter).
 
 -export([
+    filter_dwells_in_packetlist/2,
     filter_targets_in_packetlist/2,
     filter_dwell_targets/2, 
     filter_targets/2, 
     box_pred/3,
     create_target_pred/2]).
+
+-record(dwell_datetime, {mission_ref, dwell_ms}).
+
+%% Applies the predicate function to the dwells in the list of packets.
+filter_dwells_in_packetlist(Pred, PacketList) when is_function(Pred), 
+    is_list(PacketList) ->
+    F = fun(Packet, {RefDate, AccPktList}) ->
+            %filter_dwells_in_packet(Pred, Packet)
+            {RefDate, [Packet|AccPktList]}
+        end,
+    {_, ReversedList} = lists:foldl(F, {{1970,1,1},[]}, PacketList),
+    lists:reverse(ReversedList).
 
 %% Applies the predicate function to the targets in the list of packets.
 filter_targets_in_packetlist(Pred, PacketList) when is_function(Pred), 
@@ -20,12 +33,12 @@ filter_targets_in_packet(Pred, Packet) when is_function(Pred) ->
     Segs = s4607:get_packet_segments(Packet),
     F = fun(Seg) ->
             SegHdr = segment:get_header(Seg),
-            SegType = seg_header:get_type(SegHdr), 
+            SegType = seg_header:get_segment_type(SegHdr), 
             case SegType of 
                 dwell ->
                     DwellData = segment:get_data(Seg),
                     NewDwellData = filter_dwell_targets(Pred, DwellData),
-                    s4607:update_segment_data(Seg, NewDwellData);
+                    segment:update_segment_data(Seg, NewDwellData);
                 _     ->
                     Seg
             end
@@ -63,4 +76,25 @@ box_pred({Lat, Lon}, {TL_Lat, TL_Lon}, {BR_Lat, BR_Lon}) when
 box_pred({_, _}, {TL_Lat, TL_Lon}, {BR_Lat, BR_Lon}) when
     TL_Lat >= BR_Lat, TL_Lon =< BR_Lon ->
     false. 
+
+%%data_time_pred({Y,M,D} = MissRef, DwellMS, 
+
+%% Comparison function for dwell times referenced to a mission segment date.
+%% Follows C library qsort comparison function logic.
+%% Compares dates first, looks at times if dates are equal.
+%compare_dwell_datetime(
+%    #dwell_datetime{mission_ref = MR1}, 
+%    #dwell_datetime{mission_ref = MR2}) when MR1 < MR2 -> -1;
+%compare_dwell_datetime(
+%    #dwell_datetime{mission_ref = MR1}, 
+%    #dwell_datetime{mission_ref = MR2}) when MR1 > MR2 -> 1;
+%compare_dwell_datetime(
+%    #dwell_datetime{dwell_ms = DT1}, 
+%    #dwell_datetime{dwell_ms = DT2}) when DT1 < DT2 -> -1;
+%compare_dwell_datetime(
+%    #dwell_datetime{dwell_ms = DT1}, 
+%    #dwell_datetime{dwell_ms = DT2}) when DT1 > DT2 -> 1;
+%compare_dwell_datetime(
+%    #dwell_datetime{}, 
+%    #dwell_datetime{}) -> 0.
 
