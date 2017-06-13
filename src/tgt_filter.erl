@@ -25,10 +25,18 @@ filter_dwells_in_packetlist(Pred, PacketList) when is_function(Pred),
     {_, ReversedList} = lists:foldl(F, {{1970,1,1},[]}, PacketList),
     lists:reverse(ReversedList).
 
-%% Function to update a packet
-update_packet(_Pred, Packet, RefDate) ->
-    _Segs = s4607:get_packet_segments(Packet),
-    {ok, Packet, RefDate}.
+%% Function to update a packet. If the filtered list of segments is empty
+%% then the packet is dropped.
+update_packet(Pred, Packet, RefDate) ->
+    Segs = s4607:get_packet_segments(Packet),
+    {NewRefDate, NewSegs} = lists:foldl(Pred, {RefDate, []}, Segs),
+    case NewSegs of
+        [] -> 
+            drop;
+        _  -> 
+            NewPacket = s4607:update_segments_in_packet(Packet, NewSegs),
+            {ok, NewPacket, NewRefDate}
+    end.
 
 %% Applies the predicate function to the targets in the list of packets.
 filter_targets_in_packetlist(Pred, PacketList) when is_function(Pred), 
