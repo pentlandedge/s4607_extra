@@ -1,0 +1,46 @@
+#!/usr/bin/env escript
+%% -*- erlang -*-
+%%! -smp enable -sname filter_dwells -pa ebin -pa deps/s4607/ebin -mnesia debug verbose
+main([InFile, OutFile, StartDateStr, StartTimeStr, EndDateStr, EndTimeStr]) ->
+    try
+        StartDate = read_date(StartDateStr),
+        StartTime = read_time(StartTimeStr),
+        EndDate = read_date(EndDateStr),
+        EndTime = read_time(EndTimeStr),
+        DateTime1 = {StartDate, StartTime},
+        DateTime2 = {EndDate, EndTime},
+        Bin = s4607:read_file(InFile),
+        PacketList = s4607:decode(Bin),
+        Pred = tgt_filter:create_dwell_time_pred(DateTime1, DateTime2),
+        PL2 = tgt_filter:filter_dwells_in_packetlist(Pred, PacketList),
+        FiltBin = s4607:encode_packets(PL2),
+        s4607:write_file(OutFile, FiltBin)
+    catch
+        _:_ ->
+            usage()
+    end;
+main(Args) ->
+    io:format("Len ~p~n", [length(Args)]),
+    usage().
+
+usage() ->
+    io:format("usage: filter_dwells input_file output_file start_date start_time end_date end_time~n"),
+    io:format("where:~n"),
+    io:format("date format: Day/Month/Year.~n"),
+    io:format("time format: Hour:Min:Sec.~n"),
+    io:format("example:~n"),
+    io:format("./filter_dwells in_file.4607 out_file.4607 24/4/2013 12:01:00 24/4/2013 12:02:00~n"),
+    halt(1).
+
+%% Read a date string of the format Days/Months/Year (UK format). Returns an
+%% Erlang date structure in reverse order.
+read_date(DateStr) -> 
+    F = fun(X) -> list_to_integer(X) end,
+    [D,M,Y] = string:tokens(DateStr, "/"),
+    {F(Y),F(M),F(D)}.
+
+%% Read a time string of the format Hours:Min:Sec
+read_time(TimeStr) -> 
+    F = fun(X) -> list_to_integer(X) end,
+    [H,M,S] = string:tokens(TimeStr, ":"),
+    {F(H),F(M),F(S)}.
