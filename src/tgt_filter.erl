@@ -6,7 +6,8 @@
     filter_dwell_targets/2, 
     filter_targets/2, 
     box_pred/3,
-    create_target_pred/2]).
+    create_target_pred/2,
+    create_dwell_time_pred/2]).
 
 -record(dwell_datetime, {mission_ref, dwell_ms}).
 
@@ -16,8 +17,8 @@ filter_dwells_in_packetlist(Pred, PacketList) when is_function(Pred),
     F = fun(Packet, {RefDate, AccPktList}) ->
             %filter_dwells_in_packet(Pred, Packet)
             case update_packet(Pred, Packet, RefDate) of
-                {ok, Pkt, RefDate} ->
-                    {RefDate, [Pkt|AccPktList]};
+                {ok, Pkt, NewRefDate} ->
+                    {NewRefDate, [Pkt|AccPktList]};
                 drop ->
                     {RefDate, AccPktList}
             end
@@ -29,14 +30,59 @@ filter_dwells_in_packetlist(Pred, PacketList) when is_function(Pred),
 %% then the packet is dropped.
 update_packet(Pred, Packet, RefDate) ->
     Segs = s4607:get_packet_segments(Packet),
-    {NewRefDate, NewSegs} = lists:foldl(Pred, {RefDate, []}, Segs),
-    case NewSegs of
+    {NewRefDate, ReversedSegs} = lists:foldl(Pred, {RefDate, []}, Segs),
+    case ReversedSegs of
         [] -> 
             drop;
         _  -> 
+            NewSegs = lists:reverse(ReversedSegs),
             NewPacket = s4607:update_segments_in_packet(Packet, NewSegs),
             {ok, NewPacket, NewRefDate}
     end.
+
+%% Function to create a time based predicate that can be used to filter dwell 
+%% segments using a fold. Since the mission time can be updated during the 
+%% sequence, this is threaded through the accumulator.
+create_dwell_time_pred(StartTime, EndTime) ->
+    fun(Seg, {RefDate, SegList}) ->
+        SegHdr = segment:get_header(Seg),
+        SegType = seg_header:get_segment_type(SegHdr), 
+        SegData = segment:get_data(Seg),
+
+        case SegType of 
+            dwell ->
+                DwellTimeMS = dwell:get_dwell_time(SegData),
+                DwellTime = dwell_offset_to_time(DwellTimeMS),
+                DateTime = {RefDate, DwellTime},
+                case datetime_in_interval(DateTime, StartTime, EndTime) of
+                    true ->
+                        {RefDate, [Seg|SegList]};
+                    false ->
+                        {RefDate, SegList}
+                end;
+            mission ->
+                % Update the reference date when a mission segment is received.
+                MissionDate = mission:get_time(SegData),
+                {MissionDate, [Seg|SegList]};
+            _ ->
+                % Accumulate other segments unmodified.
+                {RefDate, [Seg|SegList]}
+        end
+    end.
+
+%% Function to test whether a datetime() lies within the specified interval
+datetime_in_interval(DateTime, Start, End) ->
+    % Conversions to Gregorian seconds probably unnecessary.
+    GregSec = calendar:datetime_to_gregorian_seconds(DateTime),
+    StartSec = calendar:datetime_to_gregorian_seconds(Start),
+    EndSec = calendar:datetime_to_gregorian_seconds(End),
+    (GregSec >= StartSec) and (GregSec =< EndSec).
+
+%% Function to convert a dwell offset in ms to a time (truncating to 
+%% seconds).
+dwell_offset_to_time(DwellMS) ->
+    Secs = trunc(DwellMS / 1000),
+    calendar:seconds_to_time(Secs).
 
 %% Applies the predicate function to the targets in the list of packets.
 filter_targets_in_packetlist(Pred, PacketList) when is_function(Pred), 
