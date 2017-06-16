@@ -7,7 +7,9 @@
     filter_targets/2, 
     box_pred/3,
     create_target_pred/2,
-    create_dwell_time_pred/2]).
+    create_dwell_time_pred/2,
+    dwell_offset_to_time/1,
+    dwell_offset_to_time_ms/1]).
 
 -record(dwell_datetime, {mission_ref, dwell_ms}).
 
@@ -83,6 +85,13 @@ datetime_in_interval(DateTime, Start, End) ->
 dwell_offset_to_time(DwellMS) ->
     Secs = trunc(DwellMS / 1000),
     calendar:seconds_to_time(Secs).
+
+%% Function to convert a dwell offset in ms to a time including the ms field.
+dwell_offset_to_time_ms(DwellMS) ->
+    Secs = DwellMS div 1000,
+    MS = DwellMS rem 1000, 
+    {H,M,S} = calendar:seconds_to_time(Secs),
+    {H,M,S,MS}.
 
 %% Applies the predicate function to the targets in the list of packets.
 filter_targets_in_packetlist(Pred, PacketList) when is_function(Pred), 
