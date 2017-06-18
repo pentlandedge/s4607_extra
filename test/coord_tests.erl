@@ -22,7 +22,7 @@
 coord_test_() ->
     [lla_to_ecef_checks(), ecef_distance_checks(), haversine_checks(), 
      initial_bearing_checks(), destination_checks(),
-     ecef_to_enu_checks()].
+     ecef_to_enu_checks(), calc_angle_checks()].
 
 lla_to_ecef_checks() ->
     % Start with a point on the equator.
@@ -112,6 +112,25 @@ ecef_to_enu_checks() ->
      ?_assert(E2 > E3)
     ].
 
+calc_angle_checks() ->
+    % Try out a couple of angle calculations.
+    Origin = {0,0,0},
+    A = {1,0,0},
+    B = {0,1,0},
+    AngleAB = coord:calc_angle(Origin, A, B),
+    AngleBA = coord:calc_angle(Origin, A, B),
+
+    Origin2 = {1,1,1},
+    A2 = {4,4,4},
+    B2 = {-2,-2,-2},
+    AngleA2B2 = coord:calc_angle(Origin2, A2, B2),
+    AngleB2A2 = coord:calc_angle(Origin2, A2, B2),
+
+    [?_assert(almost_equal(math:pi() / 2, AngleAB, 0.00001)),
+     ?_assert(almost_equal(math:pi() / 2, AngleBA, 0.00001)),
+     ?_assert(almost_equal(math:pi(), AngleA2B2, 0.00001)),
+     ?_assert(almost_equal(math:pi(), AngleB2A2, 0.00001))].
+    
 %% Utility function to compare whether floating point values are within a 
 %% specified range.
 almost_equal(V1, V2, Delta) ->
