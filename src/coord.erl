@@ -24,7 +24,10 @@
     initial_bearing/2,
     destination/3,
     ecef_to_enu/2,
-    fmod/2]).
+    fmod/2, 
+    calc_angle/3,
+    dot_product/2,
+    vec_mag/1]).
 
 %% WGS84 constants.
 -define(WGS84_A, 6378137).
@@ -188,4 +191,27 @@ fmod(X, Y) ->
     Div = float(trunc(X/Y)),
     Rem = X - Div*Y,
     Rem.
+
+%% Calculate the angle between two points from a common origin. Return value
+%% is in radians. Arguments must be supplied in ECEF format.
+calc_angle({X1,Y1,Z1} = _Orig, {X2,Y2,Z2} = _A, {X3,Y3,Z3} = _B) ->
+    % Create vectors OA and OB.
+    OA = {X2-X1, Y2-Y1, Z2-Z1},
+    OB = {X3-X1, Y3-Y1, Z3-Z1},
+    % Calculate the dot product of the two vectors.
+    DotProd = dot_product(OA, OB),
+    % Calculate vector magnitudes.
+    MagOA = vec_mag(OA),
+    MagOB = vec_mag(OB),
+    % Compute the angle.
+    math:acos(DotProd / (MagOA * MagOB)).
+
+
+%% Calculate the dot product of two vectors.
+dot_product({X1, Y1, Z1}, {X2, Y2, Z2}) ->
+    X1*X2 + Y1*Y2 + Z1*Z2.
+
+%% Calculate the magnitude of a vector.
+vec_mag({X, Y, Z}) ->
+    math:sqrt(X*X + Y*Y + Z*Z).
 
