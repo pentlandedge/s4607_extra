@@ -137,7 +137,7 @@ create_target_pred({TL_Lat, TL_Lon} = TL, {BR_Lat, BR_Lon} = BR) when
     fun(Tgt) ->
         TgtLat = tgt_report:get_target_hr_lat(Tgt),
         TgtLon = tgt_report:get_target_hr_lon(Tgt),
-        box_pred({TgtLat,TgtLon},TL, BR)
+        box_pred({TgtLat,-360.0 + TgtLon},TL, BR)
     end.
 
 %% Predicate function to filter a Lat, Lon point depending upon whether it 
