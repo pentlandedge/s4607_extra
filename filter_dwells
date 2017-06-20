@@ -68,12 +68,14 @@ main(Args) ->
     end.
 
 usage() ->
-    io:format("usage: filter_dwells input_file output_file start_date start_time end_date end_time~n"),
+    io:format("usage: filter_dwells --file input_file --output output_file --box TL_Lat TL_Lon BR_Lat BR_Lon --time start_date start_time end_date end_time~n"),
     io:format("where:~n"),
+    io:format("TL_Lat TL_Lon are the Lat Lon points of the \"top left\" point of the bounding box.~n"),
+    io:format("BR_Lat BR_Lon are the Lat Lon points of the \"bottom right\" point of the bounding box.~n"),
     io:format("date format: Day/Month/Year.~n"),
     io:format("time format: Hour:Min:Sec.~n"),
     io:format("example:~n"),
-    io:format("./filter_dwells in_file.4607 out_file.4607 24/4/2013 12:01:00 24/4/2013 12:02:00~n"),
+    io:format("./filter_dwells --file in_file.4607 --output out_file.4607 --box 55.95179 -3.2084556.00217 55.9468 -3.18674 --time 26/2/2017 9:31:49 26/2/2017 9:33:04"),
     halt(1).
 
 %% Read a date string of the format Days/Months/Year (UK format). Returns an
