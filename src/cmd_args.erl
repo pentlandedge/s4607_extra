@@ -4,6 +4,8 @@
 -export([collect/1, collect/5, all_present/2]).
 -export([opt_map/1]).
 
+-export([read_box/1]).
+
 %% Collect arguments associated with each option found in the list.
 collect(Args) ->
     collect(Args, [], [], undefined, []).
@@ -53,3 +55,6 @@ all_present(Keys, Proplist) ->
         _  -> {false, Missing}
     end.
 
+read_box([BL_LatS, BL_LonS, TR_LatS, TR_LonS]) -> 
+    F = fun(NumStr) -> string_to_number(NumStr) end,
+    {{F(BL_LatS),F(BL_LonS)},{F(TR_LatS),F(TR_LonS)}}.

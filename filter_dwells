@@ -20,8 +20,52 @@ main([InFile, OutFile, StartDateStr, StartTimeStr, EndDateStr, EndTimeStr]) ->
             usage()
     end;
 main(Args) ->
-    io:format("Len ~p~n", [length(Args)]),
-    usage().
+    {Props, _} = cmd_args:collect(Args),
+    try
+        % Get the arguments
+        InFile = proplists:get_value(file, Props),
+        OutFile = proplists:get_value(output, Props),
+        TimeRange = proplists:get_value(time, Props),
+        BoundingBox = proplists:get_value(box, Props),
+
+        % Read the input file into a packet list.
+        Bin = s4607:read_file(InFile),
+        PacketList = s4607:decode(Bin),
+
+        % Apply a time filter to the dwells if requried.
+        case TimeRange of
+            undefined ->
+                PL2 = PacketList;
+            _ ->
+                % Not terribly flexible, needs improved.
+                [StartDateStr,StartTimeStr,EndDateStr,EndTimeStr] = TimeRange,        
+
+                StartDate = read_date(StartDateStr),
+                StartTime = read_time(StartTimeStr),
+                EndDate = read_date(EndDateStr),
+                EndTime = read_time(EndTimeStr),
+                DateTime1 = {StartDate, StartTime},
+                DateTime2 = {EndDate, EndTime},
+                Pred = tgt_filter:create_dwell_time_pred(DateTime1, DateTime2),
+                PL2 = tgt_filter:filter_dwells_in_packetlist(Pred, PacketList)
+        end,
+
+        % Apply a box filter if required.
+        case BoundingBox of
+            undefined ->
+                PL3 = PL2;
+            _ ->
+                {TL,BR} = cmd_args:read_box(BoundingBox),
+                Pred2 = tgt_filter:create_target_pred(TL, BR),
+                PL3 = tgt_filter:filter_targets_in_packetlist(Pred2, PL2)
+        end,
+
+        FiltBin = s4607:encode_packets(PL3),
+        s4607:write_file(OutFile, FiltBin)
+    catch
+        _:_ ->
+            usage()
+    end.
 
 usage() ->
     io:format("usage: filter_dwells input_file output_file start_date start_time end_date end_time~n"),
