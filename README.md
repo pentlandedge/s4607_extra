@@ -18,7 +18,7 @@ The library functions can be called from the Erlang shell. When starting the she
 ```
 which is the equivalent of running
 ```
-# erl -pa ebin -pa deps/s4607/ebin
+# erl -pa ebin -pa deps/s4607/ebin -pa deps/jsx/ebin
 ```
 ## Coordinate conversion
 There is a function for converting Latitude, Longitude, Altitude triples (referenced to the WGS ellipsoid) into ECEF (Earth Centred Earth Fixed) format. For example, from the Erlang prompt:
