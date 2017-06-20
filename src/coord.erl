@@ -27,7 +27,9 @@
     fmod/2, 
     calc_angle/3,
     dot_product/2,
-    vec_mag/1]).
+    vec_mag/1,
+    dec_to_dms/1,
+    dms_to_dec/1]).
 
 %% WGS84 constants.
 -define(WGS84_A, 6378137).
@@ -214,4 +216,20 @@ dot_product({X1, Y1, Z1}, {X2, Y2, Z2}) ->
 %% Calculate the magnitude of a vector.
 vec_mag({X, Y, Z}) ->
     math:sqrt(X*X + Y*Y + Z*Z).
+
+%% Convert a decimal coordinate to {degrees,minutes,seconds}.
+dec_to_dms(Dec) ->
+    Deg = trunc(Dec),
+    MinF = abs(Dec - Deg),
+    Min = trunc(60.0 * MinF),
+    SecF = MinF - (Min / 60.0),
+    Sec = 3600.0 * SecF,
+    {Deg,Min,Sec}.
+
+dms_to_dec({H,M,S}) ->
+    Mag = abs(H) + (M / 60.0) + (S / 3600.0),
+    case H >= 0 of
+        true  -> Mag;
+        false -> -Mag
+    end.
 
