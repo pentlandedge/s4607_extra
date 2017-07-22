@@ -16,8 +16,10 @@
 -module(tgt_stats).
 
 -export([
+    new_scan/0,
     extract/1,
     accumulate_scans/1,
+    accumulate_scans/3,
     scans_to_geojson/1,
     get_targets_from_scan/1,
     dwell_area_to_polygon/2,
@@ -37,6 +39,10 @@
     {last_mission = none, 
      last_job_def = none, 
      grouped_dwells = []}).
+
+%% Return an empty scan.
+new_scan() ->
+    #scan{}.
 
 %% Function to extract the most useful fields relating to targets present in
 %% a list of decoded s4607 packets.
@@ -58,6 +64,13 @@ extract(PacketList) when is_list(PacketList) ->
 accumulate_scans(PacketList) when is_list(PacketList) ->
     Segs = s4607:get_segments(PacketList),
     ScanAcc  = lists:foldl(fun acc_scans/2, {[], #scan{}, []}, Segs),
+    {Scans, PartScan, Dwells} = ScanAcc,
+    NewScanList = lists:reverse(Scans),
+    {NewScanList, PartScan, Dwells}.
+
+accumulate_scans(PacketList, PartScanIn, DwellsIn) when is_list(PacketList) ->
+    Segs = s4607:get_segments(PacketList),
+    ScanAcc  = lists:foldl(fun acc_scans/2, {[], PartScanIn, DwellsIn}, Segs),
     {Scans, PartScan, Dwells} = ScanAcc,
     NewScanList = lists:reverse(Scans),
     {NewScanList, PartScan, Dwells}.
