@@ -62,11 +62,7 @@ extract(PacketList) when is_list(PacketList) ->
     lists:reverse(Dwells).
 
 accumulate_scans(PacketList) when is_list(PacketList) ->
-    Segs = s4607:get_segments(PacketList),
-    ScanAcc  = lists:foldl(fun acc_scans/2, {[], #scan{}, []}, Segs),
-    {Scans, PartScan, Dwells} = ScanAcc,
-    NewScanList = lists:reverse(Scans),
-    {NewScanList, PartScan, Dwells}.
+    accumulate_scans(PacketList, #scan{}, []).
 
 accumulate_scans(PacketList, PartScanIn, DwellsIn) when is_list(PacketList) ->
     Segs = s4607:get_segments(PacketList),
