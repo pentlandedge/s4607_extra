@@ -22,6 +22,7 @@
     accumulate_scans/3,
     scans_to_geojson/1,
     scan_prep/1,
+    calculate_scan_start_utc_time/1,
     get_targets_from_scan/1,
     dwell_area_to_polygon/2,
     datetime_to_string/1,
