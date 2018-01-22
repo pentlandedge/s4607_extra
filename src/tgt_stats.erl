@@ -92,7 +92,10 @@ proc_seg(dwell, SegData, {Scans, CurrScan , Dwells}) ->
             {[CompleteScan|Scans], CurrScan, []};
         additional_dwells ->
             {Scans, CurrScan, NewCurrent} 
-    end.
+    end;
+proc_seg(_, _, ScanAcc) -> 
+    ScanAcc.
+
 
 %% Function to convert a scan's worth of data to geojson.
 scans_to_geojson(ScanList) when is_list(ScanList)  ->
