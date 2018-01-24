@@ -11,21 +11,27 @@
 map_packet(Packet, MissionDate, DwellOffset) ->
     PH = s4607:get_packet_header(Packet),
     Segs = s4607:get_packet_segments(Packet),
-    F = fun(S) ->
-            patch_segment(S, MissionDate, DwellOffset)
+    F = fun(S, Acc) ->
+            NewSeg = patch_segment(S, MissionDate, DwellOffset),
+            [NewSeg|Acc]
         end,
-    NewSegs = lists:map(F, Segs),
+    NewSegs = lists:foldl(F, [], Segs),
     LastDwellTime = 0,
-    NewPacket = s4607:new_packet(PH, NewSegs),
+    NewPacket = s4607:new_packet(PH, lists:reverse(NewSegs)),
     {NewPacket, LastDwellTime}.
 
-patch_segment(Seg, MissionDate, _DwellOffset) ->
+patch_segment(Seg, MissionDate, DwellOffset) ->
     SH = segment:get_header(Seg),
     SegData = segment:get_data(Seg),
     Type = seg_header:get_segment_type(SH),
     case Type of
         mission ->
             NewSegData = patch_mission_seg(SegData, MissionDate),
+            segment:new0(SH, NewSegData);
+        dwell ->
+            io:format("Dwell segment ~n"),
+            DwellTimeMS = dwell:get_dwell_time(SegData) + DwellOffset,
+            NewSegData = patch_dwell_seg(SegData, DwellTimeMS),
             segment:new0(SH, NewSegData);
         _ ->
             Seg
@@ -34,3 +40,7 @@ patch_segment(Seg, MissionDate, _DwellOffset) ->
 %% @doc Update the reference date in a mission segment.
 patch_mission_seg(MS, Date) ->
     mission:set_date(MS, Date).
+
+%% @doc Update the dwell time in a segment.
+patch_dwell_seg(DS, DwellTimeMS) ->
+    dwell:set_dwell_time(DS, DwellTimeMS).
