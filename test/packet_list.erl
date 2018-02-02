@@ -17,7 +17,14 @@
 
 -module(packet_list).
 
--export([get_list1/0, get_list2/0, one_target_dwell/0]).
+-export([
+    get_list1/0, 
+    get_list2/0, 
+    get_list3/0, 
+    one_target_dwell/0,
+    one_target_dwell/1]).
+
+-define(TIME_10AM_MS, 36000000).
 
 %% Packet List 1. Consists of a single mission segment and a single 
 %% dwell segment with a single target report.
@@ -74,8 +81,47 @@ get_list2() ->
     PL1 = get_list1(), 
     [JDPacket|PL1].  
 
+%% Packet List 3. A single packet comprising a job definition, mission segment 
+%% and two dwells, each with a single target in. The dwell segments are 5
+%% seconds apart.
+get_list3() ->
+    % List the parameters for the packet header (no need to set size).
+    PL = [{version, {3, 1}}, {nationality, "UK"}, {classification, top_secret}, 
+          {class_system, "UK"}, {platform_id, "Pico1"}, 
+          {mission_id, 16#11223344}, 
+          {job_id, 16#55667788}],
+
+    % Create a generator function
+    Gen = s4607:packet_generator(PL),
+
+    % Create a complete segment with the header and payload.
+    JD = sample_job_def(),
+    JDSeg = segment:new(job_definition, JD),
+
+    % Create a complete segment with the header and payload.
+    MS = mission:new("Drifter 1", "A1234", other, "Build 1", 2016, 7, 28),
+    MissionSeg = segment:new(mission, MS),
+
+    % Create a complete segment with the header and payload.
+    DS1 = one_target_dwell(?TIME_10AM_MS),
+    DwellSeg1 = segment:new(dwell, DS1),
+
+    % Create a complete segment with the header and payload.
+    DS2 = one_target_dwell(?TIME_10AM_MS + 5000),
+    DwellSeg2 = segment:new(dwell, DS2),
+
+    % Create a packet containing the list of segments.
+    Packet = Gen([JDSeg, MissionSeg, DwellSeg1, DwellSeg2]),
+  
+    % Return as a list.
+    [Packet].
+
 %% Function to create a sample dwell with a single target report in it.
 one_target_dwell() ->
+    one_target_dwell(1000000).
+    
+%% Function to create a sample dwell with a single target report in it.
+one_target_dwell(DwellTime) ->
     % Create a list of fields for the existence mask (excluding the target
     % report).
     F = [existence_mask, revisit_index, dwell_index, last_dwell_of_revisit,
@@ -108,14 +154,14 @@ one_target_dwell() ->
     % Set the fields of the dwell segment.
     P = [{existence_mask, EM}, {revisit_index, 100}, {dwell_index, 20000}, 
          {last_dwell_of_revisit, no_additional_dwells}, {target_report_count, 1}, 
-         {dwell_time, 1000000}, {sensor_lat, 55.928613}, {sensor_lon, -2.66116},
+         {dwell_time, DwellTime}, {sensor_lat, 55.928613}, {sensor_lon, -2.66116},
          {sensor_alt, 100000}, {dwell_center_lat, 55.999591}, 
          {dwell_center_lon, -2.718204}, {dwell_range_half_extent, 2.5}, 
          {dwell_angle_half_extent, 22.5}, {targets, [TgtRep]}],
 
     % Create and return the dwell segment.
     dwell:new(P).
-    
+
 %% Create a sample job definition segment for testing.
 sample_job_def() ->
     job_def:new(sample_job_def_params()).
