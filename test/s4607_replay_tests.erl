@@ -7,7 +7,7 @@
 %% Define a test generator function to run all the tests. 
 s4607_replay_test_() ->
     [patch_mission_seg_data_checks(), patch_dwell_seg_data_checks(), 
-     patch_mission_checks(), patch_dwell_checks()].
+     patch_mission_checks(), patch_dwell_checks(), patch_dwell_checks2()].
 
 %% Simple check that the mission segment data record can be updated.
 patch_mission_seg_data_checks() ->
@@ -32,23 +32,39 @@ patch_mission_checks() ->
     Packet = sample_mission_packet(),
     Date = {2018, 1, 24},
     Replay = s4607_replay:init_replay_state(Date),
-    {NewPacket, NewReplay} = s4607_replay:update_packet(Packet, Replay, 0),
+    {NewPacket, _NewReplay} = s4607_replay:update_packet(Packet, Replay, 0),
     [MS] = s4607:get_segments([NewPacket]),
     SegData = segment:get_data(MS), 
     NewDate = mission:get_time(SegData),
     [?_assertEqual(Date, NewDate)].
 
-%% Check the patching of a dwell packet.
+%% Check the patching of a dwell packet (offset undefined).
 patch_dwell_checks() ->
     [_,Packet] = packet_list:get_list1(),
     Date = {2018, 2, 2},
     Time = ?TIME_11AM_MS, 
     Replay = s4607_replay:init_replay_state(Date),
-    {NewPacket, NewReplay} = s4607_replay:update_packet(Packet, Replay, Time),
+    {NewPacket, _NewReplay} = s4607_replay:update_packet(Packet, Replay, Time),
     [DS] = s4607:get_segments([NewPacket]),
     SegData = segment:get_data(DS), 
     NewTime = dwell:get_dwell_time(SegData),
     [?_assertEqual(Time, NewTime)].
+
+%% Check the patching of a dwell packet (offset defined).
+patch_dwell_checks2() ->
+    [_,Packet] = packet_list:get_list1(),
+    Date = {2018, 2, 2},
+    Time = ?TIME_11AM_MS, 
+    Offset = 5000,
+    Replay = s4607_replay:init_replay_state(Date, Offset),
+    {NewPacket, _NewReplay} = s4607_replay:update_packet(Packet, Replay, Time),
+    [DS] = s4607:get_segments([NewPacket]),
+    SegData = segment:get_data(DS), 
+    NewTime = dwell:get_dwell_time(SegData),
+    % The expected time is the original time in the dwell segment (1000000)
+    % plus the offset.
+    ExpectedTime = 1000000 + Offset,
+    [?_assertEqual(ExpectedTime, NewTime)].
 
 sample_mission_packet() ->
     MS = mission:new("Drifter 1", "A1234", other, "Build 1", 2016, 2, 5),

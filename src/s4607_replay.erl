@@ -5,6 +5,7 @@
 
 -export([
     init_replay_state/1,
+    init_replay_state/2,
     update_packet/3, 
     map_packet/5, 
     patch_mission_seg_data/2, 
@@ -12,9 +13,13 @@
 
 -record(replay, {mission_date, dwell_offset}).
 
-%% @doc Initialise a replay state structure.
+%% @doc Initialise a replay state structure. Sets the dwell offset to undefined.
 init_replay_state(MissionDate) ->
-    #replay{mission_date = MissionDate, dwell_offset = undefined}.
+    init_replay_state(MissionDate, undefined).
+
+%% @doc Initialise a replay state structure.
+init_replay_state(MissionDate, Offset) ->
+    #replay{mission_date = MissionDate, dwell_offset = Offset}.
 
 %% @doc Update any mission and dwell segments in the packet to the new date
 %% and time. Returns a new packet and replay state.
@@ -42,15 +47,17 @@ patch_segment(Seg, Replay, TimeMS) ->
             NewSegData = patch_mission_seg_data(SegData, MD),
             NewSeg = segment:new0(SH, NewSegData);
         dwell ->
+            OrigDwellTime = dwell:get_dwell_time(SegData),
             case Offset of
                 undefined ->
-                    OrigDwellTime = dwell:get_dwell_time(SegData),
                     NewOffset = TimeMS - OrigDwellTime, 
                     NewReplay = #replay{dwell_offset = NewOffset}, 
                     NewSegData = patch_dwell_seg_data(SegData, TimeMS),
                     NewSeg = segment:new0(SH, NewSegData);
                 _ ->
-                    NewSeg = Seg,
+                    NewDwellTime = OrigDwellTime + Offset,
+                    NewSegData = patch_dwell_seg_data(SegData, NewDwellTime),
+                    NewSeg = segment:new0(SH, NewSegData),
                     NewReplay = Replay
             end;
         _ ->
