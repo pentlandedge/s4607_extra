@@ -5,24 +5,24 @@
 
 -export([
     init_replay_state/1,
-    update_packet/2, 
+    update_packet/3, 
     map_packet/5, 
     patch_mission_seg_data/2, 
     patch_dwell_seg_data/2]).
 
--record(replay_state, {mission_date, dwell_offset}).
+-record(replay, {mission_date, dwell_offset}).
 
 %% @doc Initialise a replay state structure.
 init_replay_state(MissionDate) ->
-    #replay_state{mission_date = MissionDate, dwell_offset = undefined}.
+    #replay{mission_date = MissionDate, dwell_offset = undefined}.
 
 %% @doc Update any mission and dwell segments in the packet to the new date
 %% and time. Returns a new packet and replay state.
-update_packet(Packet, ReplayState) ->
+update_packet(Packet, ReplayState, CurrentTimeMS) ->
     PH = s4607:get_packet_header(Packet),
     Segs = s4607:get_packet_segments(Packet),
     F = fun(Seg, {SegList, Replay}) ->
-            {NewSeg, NewReplay} = patch_segment(Seg, Replay),
+            {NewSeg, NewReplay} = patch_segment(Seg, Replay, CurrentTimeMS),
             NewSegList = [NewSeg|SegList],
             {NewSegList, NewReplay}
         end,
@@ -31,7 +31,8 @@ update_packet(Packet, ReplayState) ->
     {NewPacket, NewReplay}.
 
 %% @doc Patch a segment and update the replay state if required.
-patch_segment(Seg, #replay_state{mission_date = MD} = Replay) ->
+patch_segment(Seg, Replay, TimeMS) ->
+    #replay{mission_date = MD, dwell_offset = Offset} = Replay,
     SH = segment:get_header(Seg),
     SegData = segment:get_data(Seg),
     Type = seg_header:get_segment_type(SH),
@@ -41,8 +42,17 @@ patch_segment(Seg, #replay_state{mission_date = MD} = Replay) ->
             NewSegData = patch_mission_seg_data(SegData, MD),
             NewSeg = segment:new0(SH, NewSegData);
         dwell ->
-            NewSeg = Seg,
-            NewReplay = Replay;
+            case Offset of
+                undefined ->
+                    OrigDwellTime = dwell:get_dwell_time(SegData),
+                    NewOffset = TimeMS - OrigDwellTime, 
+                    NewReplay = #replay{dwell_offset = NewOffset}, 
+                    NewSegData = patch_dwell_seg_data(SegData, TimeMS),
+                    NewSeg = segment:new0(SH, NewSegData);
+                _ ->
+                    NewSeg = Seg,
+                    NewReplay = Replay
+            end;
         _ ->
             NewSeg = Seg,
             NewReplay = Replay
