@@ -5,24 +5,26 @@
 %% Define a test generator function to run all the tests. 
 s4607_replay_test_() ->
 %    [patch_mission_checks()].
-    [patch_mission_seg_checks()].
+    [patch_mission_seg_data_checks(), patch_dwell_seg_data_checks()].
 
-patch_mission_seg_checks() ->
+%% Simple check that the mission segment data record can be updated.
+patch_mission_seg_data_checks() ->
     MS = mission:new("Drifter 1", "A1234", other, "Build 1", 2016, 2, 5),
     NewDate = {2018, 2, 2},
     NewMS = s4607_replay:patch_mission_seg_data(MS, NewDate),
     ActualDate = mission:get_time(NewMS),
     [?_assertEqual(NewDate, ActualDate)].
-    
-patch_mission_checks() ->
-    MissionPacket = sample_mission_packet(),
-    Date = {2018, 1, 24},
-    {NewPacket, _} = s4607_replay:map_packet(MissionPacket, Date, 0),
-    [MS] = s4607:get_segments([NewPacket]),
-    SegData = segment:get_data(MS), 
-    NewDate = mission:get_time(SegData),
-    [?_assertEqual(Date, NewDate)].
 
+%% Simple check that a dwell segment data record can be updated successfully.
+%% Uses the test data in packet_list.erl
+patch_dwell_seg_data_checks() ->
+    % Create a dwell segment data record.
+    DS = packet_list:one_target_dwell(), 
+    % 11 a.m. in milliseconds.
+    NewDwellTime = 39600000,
+    NewDS = s4607_replay:patch_dwell_seg_data(DS, NewDwellTime),
+    ActualDwellTime = dwell:get_dwell_time(NewDS),
+    [?_assertEqual(NewDwellTime, ActualDwellTime)].
 
 sample_mission_packet() ->
     MS = mission:new("Drifter 1", "A1234", other, "Build 1", 2016, 2, 5),

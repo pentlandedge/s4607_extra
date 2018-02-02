@@ -17,7 +17,7 @@
 
 -module(packet_list).
 
--export([get_list1/0, get_list2/0]).
+-export([get_list1/0, get_list2/0, one_target_dwell/0]).
 
 %% Packet List 1. Consists of a single mission segment and a single 
 %% dwell segment with a single target report.
