@@ -7,6 +7,7 @@
     init_replay_state/1,
     init_replay_state/2,
     update_packet/3, 
+    get_last_dwell_time/1,
     map_packet/5, 
     patch_mission_seg_data/2, 
     patch_dwell_seg_data/2]).
@@ -63,6 +64,19 @@ patch_segment(Seg, Replay, TimeMS) ->
             end;
         _ ->
             {Seg, Replay}
+    end.
+
+%% @doc Extract the last dwell time from a packet. Assumes that the dwell 
+%% segments are in time order.
+get_last_dwell_time(Packet) ->
+    DwellSegs = s4607:get_segments_by_type([dwell], [Packet]),
+    case DwellSegs of
+        [] ->
+            no_dwells;
+        _ ->
+            [Last|_] = lists:reverse(DwellSegs),
+            SegData = segment:get_data(Last),
+            dwell:get_dwell_time(SegData)
     end.
 
 %% @doc Update any mission and dwell segments in the packet to new dates and
