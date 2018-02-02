@@ -3,7 +3,7 @@
 
 -module(s4607_replay).
 
--export([map_packet/5, patch_mission_seg/2]).
+-export([map_packet/5, patch_mission_seg_data/2]).
 
 %% @doc Update any mission and dwell segments in the packet to new dates and
 %% times. Return the updated packet and a note of the last dwell time, which
@@ -25,7 +25,7 @@ patch_segment(Seg, MissionDate, FirstDwellRx, DwellOffset, CurrentDwellTime, Las
     Type = seg_header:get_segment_type(SH),
     case Type of
         mission ->
-            NewSegData = patch_mission_seg(SegData, MissionDate),
+            NewSegData = patch_mission_seg_data(SegData, MissionDate),
             io:format("Mission segment ~p~n", [MissionDate]),
             {FirstDwellRx, DwellOffset, LastDwellTime, segment:new0(SH, NewSegData)};
         dwell ->
@@ -52,7 +52,7 @@ patch_segment(Seg, MissionDate, FirstDwellRx, DwellOffset, CurrentDwellTime, Las
     end.
 
 %% @doc Update the reference date in a mission segment.
-patch_mission_seg(MS, Date) ->
+patch_mission_seg_data(MS, Date) ->
     mission:set_date(MS, Date).
 
 %% @doc Update the dwell time in a segment.

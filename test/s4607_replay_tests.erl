@@ -5,8 +5,15 @@
 %% Define a test generator function to run all the tests. 
 s4607_replay_test_() ->
 %    [patch_mission_checks()].
-    [].
+    [patch_mission_seg_checks()].
 
+patch_mission_seg_checks() ->
+    MS = mission:new("Drifter 1", "A1234", other, "Build 1", 2016, 2, 5),
+    NewDate = {2018, 2, 2},
+    NewMS = s4607_replay:patch_mission_seg_data(MS, NewDate),
+    ActualDate = mission:get_time(NewMS),
+    [?_assertEqual(NewDate, ActualDate)].
+    
 patch_mission_checks() ->
     MissionPacket = sample_mission_packet(),
     Date = {2018, 1, 24},
