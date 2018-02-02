@@ -43,9 +43,9 @@ patch_segment(Seg, Replay, TimeMS) ->
     Type = seg_header:get_segment_type(SH),
     case Type of
         mission ->
-            NewReplay = Replay,
             NewSegData = patch_mission_seg_data(SegData, MD),
-            NewSeg = segment:new0(SH, NewSegData);
+            NewSeg = segment:new0(SH, NewSegData),
+            {NewSeg, Replay};
         dwell ->
             OrigDwellTime = dwell:get_dwell_time(SegData),
             case Offset of
@@ -53,18 +53,17 @@ patch_segment(Seg, Replay, TimeMS) ->
                     NewOffset = TimeMS - OrigDwellTime, 
                     NewReplay = #replay{dwell_offset = NewOffset}, 
                     NewSegData = patch_dwell_seg_data(SegData, TimeMS),
-                    NewSeg = segment:new0(SH, NewSegData);
+                    NewSeg = segment:new0(SH, NewSegData),
+                    {NewSeg, NewReplay};
                 _ ->
                     NewDwellTime = OrigDwellTime + Offset,
                     NewSegData = patch_dwell_seg_data(SegData, NewDwellTime),
                     NewSeg = segment:new0(SH, NewSegData),
-                    NewReplay = Replay
+                    {NewSeg, Replay}
             end;
         _ ->
-            NewSeg = Seg,
-            NewReplay = Replay
-    end,
-    {NewSeg, NewReplay}.
+            {Seg, Replay}
+    end.
 
 %% @doc Update any mission and dwell segments in the packet to new dates and
 %% times. Return the updated packet and a note of the last dwell time, which
