@@ -3,7 +3,51 @@
 
 -module(s4607_replay).
 
--export([map_packet/5, patch_mission_seg_data/2, patch_dwell_seg_data/2]).
+-export([
+    init_replay_state/1,
+    update_packet/2, 
+    map_packet/5, 
+    patch_mission_seg_data/2, 
+    patch_dwell_seg_data/2]).
+
+-record(replay_state, {mission_date, dwell_offset}).
+
+%% @doc Initialise a replay state structure.
+init_replay_state(MissionDate) ->
+    #replay_state{mission_date = MissionDate, dwell_offset = undefined}.
+
+%% @doc Update any mission and dwell segments in the packet to the new date
+%% and time. Returns a new packet and replay state.
+update_packet(Packet, ReplayState) ->
+    PH = s4607:get_packet_header(Packet),
+    Segs = s4607:get_packet_segments(Packet),
+    F = fun(Seg, {SegList, Replay}) ->
+            {NewSeg, NewReplay} = patch_segment(Seg, Replay),
+            NewSegList = [NewSeg|SegList],
+            {NewSegList, NewReplay}
+        end,
+    {NewSegs, NewReplay} = lists:foldl(F, {[], ReplayState}, Segs),
+    NewPacket = s4607:new_packet(PH, lists:reverse(NewSegs)),
+    {NewPacket, NewReplay}.
+
+%% @doc Patch a segment and update the replay state if required.
+patch_segment(Seg, #replay_state{mission_date = MD} = Replay) ->
+    SH = segment:get_header(Seg),
+    SegData = segment:get_data(Seg),
+    Type = seg_header:get_segment_type(SH),
+    case Type of
+        mission ->
+            NewReplay = Replay,
+            NewSegData = patch_mission_seg_data(SegData, MD),
+            NewSeg = segment:new0(SH, NewSegData);
+        dwell ->
+            NewSeg = Seg,
+            NewReplay = Replay;
+        _ ->
+            NewSeg = Seg,
+            NewReplay = Replay
+    end,
+    {NewSeg, NewReplay}.
 
 %% @doc Update any mission and dwell segments in the packet to new dates and
 %% times. Return the updated packet and a note of the last dwell time, which

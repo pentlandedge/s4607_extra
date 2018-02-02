@@ -4,8 +4,8 @@
 
 %% Define a test generator function to run all the tests. 
 s4607_replay_test_() ->
-%    [patch_mission_checks()].
-    [patch_mission_seg_data_checks(), patch_dwell_seg_data_checks()].
+    [patch_mission_seg_data_checks(), patch_dwell_seg_data_checks(), 
+     patch_mission_checks()].
 
 %% Simple check that the mission segment data record can be updated.
 patch_mission_seg_data_checks() ->
@@ -25,6 +25,17 @@ patch_dwell_seg_data_checks() ->
     NewDS = s4607_replay:patch_dwell_seg_data(DS, NewDwellTime),
     ActualDwellTime = dwell:get_dwell_time(NewDS),
     [?_assertEqual(NewDwellTime, ActualDwellTime)].
+
+%% Check the patching of a packet containing a single mission segment.
+patch_mission_checks() ->
+    MissionPacket = sample_mission_packet(),
+    Date = {2018, 1, 24},
+    Replay = s4607_replay:init_replay_state(Date),
+    {NewPacket, NewReplay} = s4607_replay:update_packet(MissionPacket, Replay),
+    [MS] = s4607:get_segments([NewPacket]),
+    SegData = segment:get_data(MS), 
+    NewDate = mission:get_time(SegData),
+    [?_assertEqual(Date, NewDate)].
 
 sample_mission_packet() ->
     MS = mission:new("Drifter 1", "A1234", other, "Build 1", 2016, 2, 5),
