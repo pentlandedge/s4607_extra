@@ -52,7 +52,7 @@ patch_segment(Seg, Replay, TimeMS) ->
             case Offset of
                 undefined ->
                     NewOffset = TimeMS - OrigDwellTime, 
-                    NewReplay = #replay{dwell_offset = NewOffset}, 
+                    NewReplay = Replay#replay{dwell_offset = NewOffset}, 
                     NewSegData = patch_dwell_seg_data(SegData, TimeMS),
                     NewSeg = segment:new0(SH, NewSegData),
                     {NewSeg, NewReplay};
