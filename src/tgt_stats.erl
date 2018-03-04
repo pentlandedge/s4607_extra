@@ -310,7 +310,8 @@ gen_tgt_geojson(Timestamp, TimeUtc, Lat, Lon, Alt) ->
     [{<<"type">>, <<"Feature">>},
      {<<"properties">>, [{<<"time">>, list_to_binary(Timestamp)},
                         {<<"start">>, TimeUtc},
-                        {<<"end">>, TimeUtc}]},
+                        {<<"end">>, TimeUtc},
+                        {<<"type">>, <<"Target">>}]},
      {<<"geometry">>, [{<<"type">>, <<"Point">>},
                        {<<"coordinates">>, [Lon, Lat, Alt]}]}].
 
