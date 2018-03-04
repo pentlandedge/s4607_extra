@@ -112,7 +112,8 @@ scan_prep(#scan{grouped_dwells = GD} = Scan) ->
     TimeUtc = calculate_scan_utc_time_ms(Scan),
     % Extract the sensor position and dwell area parameters and use these to
     % calculate the vertices of the dwell polygon.
-    _SensorPos = get_sensor_position_from_scan(Scan),
+    SensorPos = get_sensor_position_from_scan(Scan),
+    SensorGeo = sensor_to_geojson(SensorPos, TimeStr, TimeUtc),
 
     PointList = grouped_dwells_to_polygon(GD),
 
@@ -125,7 +126,7 @@ scan_prep(#scan{grouped_dwells = GD} = Scan) ->
 
     % Form the scan area GeoJSON and construct our list of features.
     ScanAreaGeo = scan_polygon_to_geojson(TimeStr, TimeUtc, PointList),
-    FeatureList = [ScanAreaGeo|TgtGeoList],
+    FeatureList = [ScanAreaGeo|[SensorGeo|TgtGeoList]],
 
     % Structure the whole lot for encoding and return to caller.
     [{<<"type">>,<<"FeatureCollection">>},
@@ -185,7 +186,21 @@ get_sensor_position_from_scan(#scan{grouped_dwells = GD}) ->
 
     {SensorLat, SensorLon, SensorAltMetres}.
 
-%% Extract a flattened list of targets from the group of dwells comprising 
+%% Convert the sensor location to a form suitable for GeoJSON encoding.
+sensor_to_geojson({Lat, Lon, Alt}, Timestamp, TimeUtc) ->
+    LonN = case Lon > 180.0 of
+            true -> Lon - 360.0;
+            false -> Lon
+        end,
+    [{<<"type">>, <<"Feature">>},
+     {<<"properties">>, [{<<"time">>, list_to_binary(Timestamp)},
+                        {<<"start">>, TimeUtc},
+                        {<<"end">>, TimeUtc},
+                        {<<"type">>, <<"Sensor">>}]},
+     {<<"geometry">>, [{<<"type">>, <<"Point">>},
+                       {<<"coordinates">>, [LonN, Lat, Alt]}]}].
+
+%% Extract a flattened list of targets from the group of dwells comprising
 %% a scan.
 get_targets_from_scan(#scan{grouped_dwells = GD}) ->
     NestedTgts = lists:map(fun dwell:get_targets/1, GD),
