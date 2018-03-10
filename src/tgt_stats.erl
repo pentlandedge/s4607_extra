@@ -188,10 +188,7 @@ get_sensor_position_from_scan(#scan{grouped_dwells = GD}) ->
 
 %% Convert the sensor location to a form suitable for GeoJSON encoding.
 sensor_to_geojson({Lat, Lon, Alt}, Timestamp, TimeUtc) ->
-    LonN = case Lon > 180.0 of
-            true -> Lon - 360.0;
-            false -> Lon
-        end,
+    LonN = coord:signed_lon(Lon),
     [{<<"type">>, <<"Feature">>},
      {<<"properties">>, [{<<"time">>, list_to_binary(Timestamp)},
                         {<<"start">>, TimeUtc},
@@ -211,10 +208,7 @@ get_targets_from_scan(#scan{grouped_dwells = GD}) ->
 target_to_geojson(TgtRep, TimeStr, TimeUtc) ->
     HrLat = tgt_report:get_target_hr_lat(TgtRep),
     HrLon = tgt_report:get_target_hr_lon(TgtRep),
-    HrLonN = case HrLon > 180.0 of
-                 true -> HrLon - 360.0;
-                 false -> HrLon
-             end,
+    HrLonN = coord:signed_lon(HrLon),
     Height = tgt_report:get_geodetic_height(TgtRep),
     gen_tgt_geojson(TimeStr, TimeUtc, HrLat, HrLonN, Height).
 

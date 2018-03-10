@@ -17,6 +17,7 @@
 
 -export([
     lla_to_ecef/1, 
+    signed_lon/1,
     ecef_distance/2,
     enu_distance/2,
     deg_to_rad/1, 
@@ -66,6 +67,14 @@ lla_to_ecef({Lat,Lon,Alt}) ->
     Z = ((Bsquared/Asquared) * N + H) * SinLat, 
 
     {X, Y, Z}.
+
+%% Convert Longitude to signed degrees format
+signed_lon(Lon) ->
+
+    case Lon > 180.0 of
+        true -> Lon - 360.0;
+        false -> Lon
+    end.
 
 %% @doc Calculate the magnitude of the difference between two points 
 %% specified in ECEF format.
