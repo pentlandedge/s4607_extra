@@ -18,6 +18,9 @@
 
 -export([sample_mission_seg/0, sample_mission_seg/1, gen_position_fun/4]).
 
+%% Lower level utilities.
+-export([gen_position_list/6, timepoint_list/2]).
+
 -define(MISSION_PLAN, "Hawk Sim 1").
 -define(FLIGHT_PLAN, "FP 1").
 -define(PLAT_CONFIG, "Sim v1.00").
@@ -48,4 +51,16 @@ gen_position_fun(Lat, Lon, Bearing, Speed) ->
         Distance = Speed * Time,
         coord:destination({Lat, Lon}, Bearing, Distance)
     end.
+
+%% @doc Generate a list of positions for an object moving at constant speed
+%% and bearing.
+gen_position_list(Lat, Lon, Bearing, Speed, N, TimeDelta) ->
+    F = gen_position_fun(Lat, Lon, Bearing, Speed),
+    TimeList = timepoint_list(N, TimeDelta),
+    lists:map(F, TimeList).
+
+%% @doc Generate a list of time points.
+timepoint_list(N, TimeDelta) ->
+    Points = lists:seq(0, N-1),
+    lists:map(fun(P) -> TimeDelta * P end, Points).
 
