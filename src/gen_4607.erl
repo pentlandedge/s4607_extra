@@ -62,8 +62,13 @@ sample_target_report(ReportIndex, Lat, Lon, Height, SNR, RCS) ->
               {target_snr, SNR}, {target_slant_range_unc, ?SLANT_RANGE_UNC}, 
               {target_cross_range_unc, ?CROSS_RANGE_UNC}, 
               {target_height_unc, ?HEIGHT_UNC}, {target_rcs, RCS}],
+    
+    % Extract the list of fields in the target report.
+    FieldList = [K || {K, _V} <- Params],
 
-    Params.
+    % Generate the target report and return it with the list of fields, 
+    % present.
+    {FieldList, tgt_report:new(Params)}.
 
 %% @doc Generate a function which can calcuate the position of a given target 
 %% at a specified time. This is based on an initial position, a constant 
