@@ -20,6 +20,8 @@
 
 -export([sample_dwell_seg/2, sample_target_report/6]).
 
+-export([tgt_report_list/1, positions_to_tgt_info/4]).
+
 %% Lower level utilities.
 -export([gen_position_fun/4, gen_position_list/6, timepoint_list/2]).
 
@@ -70,14 +72,23 @@ sample_target_report(ReportIndex, Lat, Lon, Height, SNR, RCS) ->
     % present.
     {FieldList, tgt_report:new(Params)}.
 
+%% @doc Generate a list of target reports.
 tgt_report_list(TgtInfo) when is_list(TgtInfo) ->
     N = length(TgtInfo),
-    Indices = lists:seq(0,N),
+    Indices = lists:seq(0,N-1),
     F = fun(Index, {Lat, Lon, Height, SNR, RCS}) ->
             sample_target_report(Index, Lat, Lon, Height, SNR, RCS)
         end,
     TaggedReports = lists:zipwith(F, Indices, TgtInfo),
     TaggedReports.
+
+%% @doc Generate a target information tuples from a list of target 
+%% positions. Assumes constant height,RCS,SNR.
+positions_to_tgt_info(Positions, Height, SNR, RCS) ->
+    F = fun({Lat, Lon}) ->
+            {Lat, Lon, Height, SNR, RCS}
+        end,
+    lists:map(F, Positions).
 
 %% @doc Generate a function which can calcuate the position of a given target 
 %% at a specified time. This is based on an initial position, a constant 
