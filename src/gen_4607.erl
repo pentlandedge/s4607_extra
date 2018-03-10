@@ -16,14 +16,22 @@
 %% Some routines for generating sample Stanag 4607 packets.
 -module(gen_4607).
 
--export([sample_mission_seg/0, sample_mission_seg/1, gen_position_fun/4]).
+-export([sample_mission_seg/0, sample_mission_seg/1]).
+
+-export([sample_dwell_seg/2, sample_target_report/6]).
 
 %% Lower level utilities.
--export([gen_position_list/6, timepoint_list/2]).
+-export([gen_position_fun/4, gen_position_list/6, timepoint_list/2]).
 
+%% Constants to use with mission plan.
 -define(MISSION_PLAN, "Hawk Sim 1").
 -define(FLIGHT_PLAN, "FP 1").
 -define(PLAT_CONFIG, "Sim v1.00").
+
+%% Constants to use with target reports.
+-define(SLANT_RANGE_UNC, 100). % c.m.
+-define(CROSS_RANGE_UNC, 100). % d.m.
+-define(HEIGHT_UNC, 10). % m.
 
 %% @doc Generate a mission segment (including segment header) with today's 
 %% date.
@@ -42,6 +50,20 @@ sample_mission_seg({Year, Month, Day}) ->
                      Month, 
                      Day),
     segment:new(mission, MS).
+
+%% @doc Generate a dwell segment with the specified list of target positions.
+sample_dwell_seg(_DwellTimeMS, _Targets) ->
+    ok.
+
+%% @doc Generate a target report with the specified position.
+sample_target_report(ReportIndex, Lat, Lon, Height, SNR, RCS) ->
+    Params = [{mti_report_index, ReportIndex}, {target_hr_lat, Lat}, 
+              {target_hr_lon, Lon}, {geodetic_height, Height},
+              {target_snr, SNR}, {target_slant_range_unc, ?SLANT_RANGE_UNC}, 
+              {target_cross_range_unc, ?CROSS_RANGE_UNC}, 
+              {target_height_unc, ?HEIGHT_UNC}, {target_rcs, RCS}],
+
+    Params.
 
 %% @doc Generate a function which can calcuate the position of a given target 
 %% at a specified time. This is based on an initial position, a constant 
