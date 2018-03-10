@@ -70,6 +70,15 @@ sample_target_report(ReportIndex, Lat, Lon, Height, SNR, RCS) ->
     % present.
     {FieldList, tgt_report:new(Params)}.
 
+tgt_report_list(TgtInfo) when is_list(TgtInfo) ->
+    N = length(TgtInfo),
+    Indices = lists:seq(0,N),
+    F = fun(Index, {Lat, Lon, Height, SNR, RCS}) ->
+            sample_target_report(Index, Lat, Lon, Height, SNR, RCS)
+        end,
+    TaggedReports = lists:zipwith(F, Indices, TgtInfo),
+    TaggedReports.
+
 %% @doc Generate a function which can calcuate the position of a given target 
 %% at a specified time. This is based on an initial position, a constant 
 %% speed and bearing. The Haversine formula is used.
