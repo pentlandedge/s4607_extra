@@ -35,6 +35,9 @@
 -define(CROSS_RANGE_UNC, 100). % d.m.
 -define(HEIGHT_UNC, 10). % m.
 
+%% Short target information structure.
+%-record(tgt_info, {lat, lon, height, snr, rcs}).
+
 %% @doc Generate a mission segment (including segment header) with today's 
 %% date.
 sample_mission_seg() ->
