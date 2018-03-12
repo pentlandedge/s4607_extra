@@ -120,7 +120,7 @@ dwell_info(DwellTimeMS, SenLat, SenLon, SenAlt, DwLat, DwLon, Targets)
         targets = Targets}.
 
 %% @doc Constructor for tgt_info.
-tgt_info(Lat, Lon, Height, SNR, RCS) ->
+tgt_info(Lat, Lon, Height, SNR, RCS) when is_integer(SNR), is_integer(RCS) ->
     #tgt_info{lat = Lat, lon = Lon, height = Height, snr = SNR, rcs = RCS}.
 
 %% @doc Generate a target report with the specified position.
