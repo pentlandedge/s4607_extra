@@ -16,6 +16,8 @@
 %% Some routines for generating sample Stanag 4607 packets.
 -module(gen_4607).
 
+-export([sample_packet/2]).
+
 -export([sample_mission_seg/0, sample_mission_seg/1]).
 
 -export([sample_dwell_seg/3, sample_target_report/2]).
@@ -28,13 +30,20 @@
 %% Lower level utilities.
 -export([gen_position_fun/4, gen_position_list/6, timepoint_list/2]).
 
+%% Type conversion.
+-export ([time_to_dwell_ms/1]).
+
+%% Constants to use with the packet header.
+-define(PLATFORM_ID, "Deuchrie 1").
+-define(MISSION_ID, 16#11223344).
+
 %% Constants to use with mission plan.
 -define(MISSION_PLAN, "Hawk Sim 1").
 -define(FLIGHT_PLAN, "FP 1").
 -define(PLAT_CONFIG, "Sim v1.00").
 
 %% Constants to use with dwell segments.
--define(DWELL_RANGE_HALF_EXT, 10.0).
+-define(DWELL_RANGE_HALF_EXT, 6.0).
 -define(DWELL_ANGLE_HALF_EXT, 15.0).
 
 %% Constants to use with target reports.
@@ -54,6 +63,17 @@
 
 %% Short target information structure.
 -record(tgt_info, {lat, lon, height, snr, rcs}).
+
+%% @doc Generate a sample packet.
+sample_packet(JobID, Segs) ->
+    PL = [{version, {3, 0}}, {nationality, "UK"},
+          {classification, unclassified}, {class_system, "UK"},
+          {packet_code, none}, {exercise_ind, exercise_synthesized},
+          {platform_id, ?PLATFORM_ID}, {mission_id, ?MISSION_ID},
+          {job_id, JobID}],
+
+    Gen = s4607:packet_generator(PL),
+    Gen(Segs).
 
 %% @doc Generate a mission segment (including segment header) with today's 
 %% date.
@@ -99,12 +119,15 @@ sample_dwell_seg(RevisitIndex, DwellIndex,
     P = [{existence_mask, EM}, {revisit_index, RevisitIndex}, {dwell_index, DwellIndex}, 
          {last_dwell_of_revisit, no_additional_dwells}, {target_report_count, 1}, 
          {dwell_time, DT}, {sensor_lat, SenLat}, {sensor_lon, SenLon},
-         {sensor_alt, SenAlt}, {dwell_center_lat, DwLat}, 
+         {sensor_alt, SenAlt*100}, {dwell_center_lat, DwLat}, 
          {dwell_center_lon, DwLon}, {dwell_range_half_extent, ?DWELL_RANGE_HALF_EXT}, 
          {dwell_angle_half_extent, ?DWELL_ANGLE_HALF_EXT}, {targets, Reports}],
 
-    % Create and return the dwell segment.
-    dwell:new(P).
+    % Create the dwell segment.
+    DS = dwell:new(P),
+    
+    % Append the segment header.
+    segment:new(dwell, DS).
 
 %% @doc Constructor for the dwell_info() type.
 dwell_info(DwellTimeMS, SenLat, SenLon, SenAlt, DwLat, DwLon, Targets) 
@@ -159,7 +182,7 @@ tgt_report_list(TgtInfo) when is_list(TgtInfo) ->
 %% positions. Assumes constant height,RCS,SNR.
 positions_to_tgt_info(Positions, Height, SNR, RCS) ->
     F = fun({Lat, Lon}) ->
-            {Lat, Lon, Height, SNR, RCS}
+            tgt_info(Lat, Lon, Height, SNR, RCS)
         end,
     lists:map(F, Positions).
 
@@ -183,4 +206,9 @@ gen_position_list(Lat, Lon, Bearing, Speed, N, TimeDelta) ->
 timepoint_list(N, TimeDelta) ->
     Points = lists:seq(0, N-1),
     lists:map(fun(P) -> TimeDelta * P end, Points).
+
+%% @doc Convert a time() type to dwell MS.
+time_to_dwell_ms({H,M,S}) ->
+    Secs = (H * 3600) + (M * 60) + S,
+    Secs * 1000.
 
