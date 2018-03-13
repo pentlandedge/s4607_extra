@@ -18,7 +18,7 @@
 
 -export([sample_packet/2]).
 
--export([sample_mission_seg/0, sample_mission_seg/1]).
+-export([single_dwell_scan/8, sample_mission_seg/0, sample_mission_seg/1]).
 
 -export([sample_dwell_seg/3, sample_target_report/2]).
 
@@ -80,6 +80,13 @@ sample_packet(JobID, Segs) ->
 sample_mission_seg() ->
     {Date, _} = calendar:universal_time(),
     sample_mission_seg(Date).
+
+%% @doc Generate a single dwell scan.
+single_dwell_scan(RevInd, DwTimeMS, SenLat, SenLon, SenAlt, DwLat, DwLon, 
+                  Targets) when is_list(Targets) ->
+
+    Info = dwell_info(DwTimeMS, SenLat, SenLon, SenAlt, DwLat, DwLon, Targets),
+    sample_dwell_seg(RevInd, 0, Info). 
 
 %% @doc Generate a mission segment (including segment header) with the 
 %% specified date.
