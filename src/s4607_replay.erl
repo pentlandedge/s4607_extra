@@ -133,11 +133,3 @@ patch_mission_seg_data(MS, Date) ->
 patch_dwell_seg_data(DS, DwellTimeMS) ->
     dwell:set_dwell_time(DS, DwellTimeMS).
 
-%% @doc Update the last dwell time
-update_last_dwell_time(no_dwells, DTnew) -> 
-    DTnew;
-update_last_dwell_time(DTold, DTnew) when DTnew > DTold -> 
-    DTnew;
-update_last_dwell_time(DTold, _) -> 
-    DTold.
-

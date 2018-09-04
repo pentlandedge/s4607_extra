@@ -38,10 +38,6 @@ opt_map("--box")        -> box;
 opt_map("--time")       -> time;   
 opt_map(_)              -> undefined.   
 
-%% Function to process the option values. Defaults to passing the string
-%% through if no special handling is provided.
-read_val(_, X)          -> X.
-
 string_to_number(NumStr) ->
     case string:to_float(NumStr) of 
         {error, no_float} -> {X, _} = string:to_integer(NumStr), X; 

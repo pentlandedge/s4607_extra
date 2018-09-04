@@ -11,8 +11,6 @@
     dwell_offset_to_time/1,
     dwell_offset_to_time_ms/1]).
 
--record(dwell_datetime, {mission_ref, dwell_ms}).
-
 %% Applies the predicate function to the dwells in the list of packets.
 filter_dwells_in_packetlist(Pred, PacketList) when is_function(Pred), 
     is_list(PacketList) ->
@@ -149,25 +147,4 @@ box_pred({Lat, Lon}, {TL_Lat, TL_Lon}, {BR_Lat, BR_Lon}) when
 box_pred({_, _}, {TL_Lat, TL_Lon}, {BR_Lat, BR_Lon}) when
     TL_Lat >= BR_Lat, TL_Lon =< BR_Lon ->
     false. 
-
-%%data_time_pred({Y,M,D} = MissRef, DwellMS, 
-
-%% Comparison function for dwell times referenced to a mission segment date.
-%% Follows C library qsort comparison function logic.
-%% Compares dates first, looks at times if dates are equal.
-%compare_dwell_datetime(
-%    #dwell_datetime{mission_ref = MR1}, 
-%    #dwell_datetime{mission_ref = MR2}) when MR1 < MR2 -> -1;
-%compare_dwell_datetime(
-%    #dwell_datetime{mission_ref = MR1}, 
-%    #dwell_datetime{mission_ref = MR2}) when MR1 > MR2 -> 1;
-%compare_dwell_datetime(
-%    #dwell_datetime{dwell_ms = DT1}, 
-%    #dwell_datetime{dwell_ms = DT2}) when DT1 < DT2 -> -1;
-%compare_dwell_datetime(
-%    #dwell_datetime{dwell_ms = DT1}, 
-%    #dwell_datetime{dwell_ms = DT2}) when DT1 > DT2 -> 1;
-%compare_dwell_datetime(
-%    #dwell_datetime{}, 
-%    #dwell_datetime{}) -> 0.
 
