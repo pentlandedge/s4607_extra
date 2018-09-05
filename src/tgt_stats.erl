@@ -34,6 +34,9 @@
     grouped_dwells_to_polygon/1,
     fuse_polygons/1]).
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Record definitions. 
+
 -record(stat_acc, {ref_time, last_job_def, dwell_list}).
 
 %% Accumulating data as "scans" which are grouped by revisit.
@@ -41,6 +44,20 @@
     {last_mission = none, 
      last_job_def = none, 
      grouped_dwells = []}).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Type specifications.
+
+-opaque scan() :: #scan{}.
+
+%% Create a generic type which can be extended to contain various types of 
+%% information from the platform.
+-type platform_update() :: scan().
+
+-export_type([scan/0, platform_update/0]).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Function declarations.
 
 %% Return an empty scan.
 new_scan() ->
