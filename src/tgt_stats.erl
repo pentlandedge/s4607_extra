@@ -93,6 +93,8 @@ proc_seg(dwell, SegData, {Scans, CurrScan , Dwells}) ->
         additional_dwells ->
             {Scans, CurrScan, NewCurrent} 
     end;
+proc_seg(platform_loc, _, ScanAcc) -> 
+    ScanAcc;
 proc_seg(_, _, ScanAcc) -> 
     ScanAcc.
 
