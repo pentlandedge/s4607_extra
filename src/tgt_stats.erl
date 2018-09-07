@@ -35,6 +35,9 @@
     grouped_dwells_to_polygon/1,
     fuse_polygons/1]).
 
+%% Accessor functions for manipulating updates.
+-export([get_last_mission/1]).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Record definitions. 
 
@@ -92,7 +95,21 @@ extract(PacketList) when is_list(PacketList) ->
 %% location updates during periods when the radar is not being used.
 -spec accumulate_updates(PL::list()) -> [platform_update()].
 accumulate_updates(PacketList) when is_list(PacketList) ->
-    [].
+    Segs = s4607:get_segments(PacketList),
+    Updates = lists:foldl(fun acc_updates/2, [], Segs),
+    lists:reverse(Updates).
+
+acc_updates(Seg, UpdateAcc) ->
+    SH = segment:get_header(Seg),
+    SegData = segment:get_data(Seg),
+    T = seg_header:get_segment_type(SH),
+    proc_seg2(T, SegData, UpdateAcc).
+
+proc_seg2(platform_loc, SegData, UpdateAcc) -> 
+    Update = #loc_update{last_mission = none, loc_data = SegData},
+    [Update|UpdateAcc];
+proc_seg2(_, _, UpdateAcc) -> 
+    UpdateAcc.
 
 accumulate_scans(PacketList) when is_list(PacketList) ->
     accumulate_scans(PacketList, #scan{}, []).
@@ -465,4 +482,8 @@ lla_to_enu_with_ref(Points) when is_list(Points) ->
             {E, N, LatLon}
         end,
     lists:map(F, Points).
+
+%% @doc Get the last mission segment from a location update.
+-spec get_last_mission(loc_update()) -> mission:mission_segment().
+get_last_mission(#loc_update{last_mission  = X}) -> X.
 

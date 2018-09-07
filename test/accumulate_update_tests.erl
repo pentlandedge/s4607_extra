@@ -30,8 +30,9 @@ empty_packet_list_checks() ->
 %% Test a single packet with a single platform location segment.
 single_loc_update_checks() ->
     LocPkt = sample_loc_packet(),
-    _Ret = tgt_stats:accumulate_updates([LocPkt]),
-    [].
+    [Update] = tgt_stats:accumulate_updates([LocPkt]),
+    LMS = tgt_stats:get_last_mission(Update),
+    [?_assertEqual(none, LMS)].
 
 sample_loc_packet() ->
     LocSeg = sample_loc_seg(),
