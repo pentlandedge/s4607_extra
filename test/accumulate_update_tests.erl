@@ -20,9 +20,37 @@
 
 %% Define a test generator function to run all the tests.
 accumulate_update_test_() ->
-    [empty_packet_list_checks()].
+    [empty_packet_list_checks(), single_loc_update_checks()].
 
 empty_packet_list_checks() ->
     PacketList = [],
     Ret = tgt_stats:accumulate_updates(PacketList),
     [?_assertEqual([], Ret)].
+
+%% Test a single packet with a single platform location segment.
+single_loc_update_checks() ->
+    LocPkt = sample_loc_packet(),
+    _Ret = tgt_stats:accumulate_updates([LocPkt]),
+    [].
+
+sample_loc_packet() ->
+    LocSeg = sample_loc_seg(),
+    Gen = sample_packet_generator(),
+    Gen([LocSeg]).
+    
+sample_loc_seg() ->
+    SegData = sample_loc_seg_data(),
+    segment:new(platform_loc, SegData).
+
+sample_loc_seg_data() ->
+    % Mons Meg.
+    platform_loc:new(34200000, 55.94877, -3.20015, 130, 350, 0, 0).
+
+sample_packet_generator() ->
+    PL = [{version, {3, 1}}, {nationality, "UK"},
+         {classification, unclassified}, {class_system, "UK"},
+         {packet_code, none}, {exercise_ind, exercise_real},
+         {platform_id, "Plat1"}, {mission_id, 16#11223344},
+         {job_id, 16#55667788}],
+
+    s4607:packet_generator(PL).
