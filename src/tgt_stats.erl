@@ -18,6 +18,7 @@
 -export([
     new_scan/0,
     extract/1,
+    accumulate_updates/1,
     accumulate_scans/1,
     accumulate_scans/3,
     scans_to_geojson/1,
@@ -79,6 +80,14 @@ extract(PacketList) when is_list(PacketList) ->
 
     % Reverse the list to return it to chronological order.
     lists:reverse(Dwells).
+
+%% @doc New interface intended to replace accumulate_scans/1. Works over a 
+%% list of packets and accumulates generic "platform updates". This is 
+%% to allow collection of other information of interest such as platform
+%% location updates during periods when the radar is not being used.
+-spec accumulate_updates(PL::list()) -> [platform_update()].
+accumulate_updates(PacketList) when is_list(PacketList) ->
+    [].
 
 accumulate_scans(PacketList) when is_list(PacketList) ->
     accumulate_scans(PacketList, #scan{}, []).
