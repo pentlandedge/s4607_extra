@@ -36,7 +36,7 @@
     fuse_polygons/1]).
 
 %% Accessor functions for manipulating updates.
--export([get_last_mission/1]).
+-export([get_last_mission/1, get_loc_data/1]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Record definitions. 
@@ -486,4 +486,8 @@ lla_to_enu_with_ref(Points) when is_list(Points) ->
 %% @doc Get the last mission segment from a location update.
 -spec get_last_mission(loc_update()) -> mission:mission_segment().
 get_last_mission(#loc_update{last_mission  = X}) -> X.
+
+%% @doc Get the location data from the update.
+-spec get_loc_data(loc_update()) -> platform_loc:platform_location_segment().
+get_loc_data(#loc_update{loc_data = X}) -> X.
 

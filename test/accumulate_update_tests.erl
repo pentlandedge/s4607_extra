@@ -32,6 +32,7 @@ single_loc_update_checks() ->
     LocPkt = sample_loc_packet(),
     [Update] = tgt_stats:accumulate_updates([LocPkt]),
     LMS = tgt_stats:get_last_mission(Update),
+    _PlatLoc = tgt_stats:get_loc_data(Update),
     [?_assertEqual(none, LMS)].
 
 sample_loc_packet() ->
