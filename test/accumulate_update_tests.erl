@@ -22,7 +22,6 @@
 accumulate_update_test_() ->
     [empty_packet_list_checks()].
 
-
 empty_packet_list_checks() ->
     PacketList = [],
     Ret = tgt_stats:accumulate_updates(PacketList),

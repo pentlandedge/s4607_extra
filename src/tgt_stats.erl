@@ -46,16 +46,21 @@
      last_job_def = none, 
      grouped_dwells = []}).
 
+%% Record definition to hold information relating to a platform location
+%% update.
+-record(loc_update, {last_mission = none, loc_data}).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Type specifications.
 
 -opaque scan() :: #scan{}.
+-opaque loc_update() :: #loc_update{}.
 
 %% Create a generic type which can be extended to contain various types of 
 %% information from the platform.
--type platform_update() :: scan().
+-type platform_update() :: scan() | loc_update().
 
--export_type([scan/0, platform_update/0]).
+-export_type([scan/0, loc_update/0, platform_update/0]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Function declarations.
