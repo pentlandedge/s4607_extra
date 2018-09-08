@@ -20,7 +20,8 @@
 
 %% Define a test generator function to run all the tests.
 accumulate_update_test_() ->
-    [empty_packet_list_checks(), single_loc_update_checks()].
+    [empty_packet_list_checks(), single_loc_update_checks(), 
+     mission_loc_update_checks()].
 
 empty_packet_list_checks() ->
     PacketList = [],
@@ -38,14 +39,34 @@ single_loc_update_checks() ->
     [?_assertEqual(none, LMS), ?_assertEqual(130, Alt), 
      ?_assertEqual(350, Track)].
 
+%% Test a list with two packets: one containing a mission segment and the
+%% other a platform location segment.
+mission_loc_update_checks() ->
+    MisPkt = sample_mission_packet(),
+    LocPkt = sample_loc_packet(),
+    [_Update] = tgt_stats:accumulate_updates([MisPkt, LocPkt]),
+    [].
+
+sample_mission_packet() ->
+    MisSeg = sample_mission_seg(),
+    Gen = sample_packet_generator(),
+    Gen([MisSeg]).
+
 sample_loc_packet() ->
     LocSeg = sample_loc_seg(),
     Gen = sample_packet_generator(),
     Gen([LocSeg]).
-    
+   
+sample_mission_seg() ->
+    SegData = sample_mission_seg_data(),
+    segment:new(mission, SegData).
+
 sample_loc_seg() ->
     SegData = sample_loc_seg_data(),
     segment:new(platform_loc, SegData).
+
+sample_mission_seg_data() ->
+    mission:new("MISSION 1", "FP 123", fire_scout, "SW 1829", 2018, 9, 9).
 
 sample_loc_seg_data() ->
     % Mons Meg.
