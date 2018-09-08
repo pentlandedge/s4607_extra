@@ -34,7 +34,9 @@ single_loc_update_checks() ->
     LMS = tgt_stats:get_last_mission(Update),
     PlatLoc = tgt_stats:get_loc_data(Update),
     Alt = platform_loc:get_alt(PlatLoc),
-    [?_assertEqual(none, LMS), ?_assertEqual(130, Alt)].
+    Track = platform_loc:get_platform_track(PlatLoc),
+    [?_assertEqual(none, LMS), ?_assertEqual(130, Alt), 
+     ?_assertEqual(350, Track)].
 
 sample_loc_packet() ->
     LocSeg = sample_loc_seg(),
