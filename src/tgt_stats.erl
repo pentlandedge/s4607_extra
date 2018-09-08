@@ -96,7 +96,7 @@ extract(PacketList) when is_list(PacketList) ->
 -spec accumulate_updates(PL::list()) -> [platform_update()].
 accumulate_updates(PacketList) when is_list(PacketList) ->
     Segs = s4607:get_segments(PacketList),
-    Updates = lists:foldl(fun acc_updates/2, [], Segs),
+    {_, Updates} = lists:foldl(fun acc_updates/2, {none, []}, Segs),
     lists:reverse(Updates).
 
 acc_updates(Seg, UpdateAcc) ->
@@ -105,9 +105,12 @@ acc_updates(Seg, UpdateAcc) ->
     T = seg_header:get_segment_type(SH),
     proc_seg2(T, SegData, UpdateAcc).
 
-proc_seg2(platform_loc, SegData, UpdateAcc) -> 
-    Update = #loc_update{last_mission = none, loc_data = SegData},
-    [Update|UpdateAcc];
+proc_seg2(mission, SegData, {_, Updates}) ->
+    {SegData, Updates};
+proc_seg2(platform_loc, SegData, {LastMiss, Updates}) -> 
+    Update = #loc_update{last_mission = LastMiss, loc_data = SegData},
+    NewUpdates = [Update|Updates], 
+    {LastMiss, NewUpdates};
 proc_seg2(_, _, UpdateAcc) -> 
     UpdateAcc.
 

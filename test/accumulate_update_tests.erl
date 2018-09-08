@@ -44,8 +44,10 @@ single_loc_update_checks() ->
 mission_loc_update_checks() ->
     MisPkt = sample_mission_packet(),
     LocPkt = sample_loc_packet(),
-    [_Update] = tgt_stats:accumulate_updates([MisPkt, LocPkt]),
-    [].
+    [Update] = tgt_stats:accumulate_updates([MisPkt, LocPkt]),
+    LMS = tgt_stats:get_last_mission(Update),
+    Date = mission:get_time(LMS),
+    [?_assertEqual({2018, 9, 9}, Date)].
 
 sample_mission_packet() ->
     MisSeg = sample_mission_seg(),
