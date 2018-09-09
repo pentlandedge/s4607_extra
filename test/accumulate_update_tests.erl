@@ -21,7 +21,7 @@
 %% Define a test generator function to run all the tests.
 accumulate_update_test_() ->
     [empty_packet_list_checks(), single_loc_update_checks(), 
-     mission_loc_update_checks()].
+     mission_loc_update_checks(), mission_loc_dwell_update_checks()].
 
 empty_packet_list_checks() ->
     PacketList = [],
@@ -48,6 +48,16 @@ mission_loc_update_checks() ->
     LMS = tgt_stats:get_last_mission(Update),
     Date = mission:get_time(LMS),
     [?_assertEqual({2018, 9, 9}, Date)].
+
+%% Test a list with three packets: a mission, location segment followed by a 
+%% dwell segment with the last dwell of revisit set (to complete a scan).
+%% We should then get back two updates, one containing the platform location
+%% and the second containing a scan. Both updates should have the mission 
+%% date set correctly.
+mission_loc_dwell_update_checks() ->
+    _MisPkt = sample_mission_packet(),
+    _LocPkt = sample_loc_packet(),
+    [].
 
 sample_mission_packet() ->
     MisSeg = sample_mission_seg(),
