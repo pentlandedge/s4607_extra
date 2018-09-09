@@ -55,8 +55,10 @@ mission_loc_update_checks() ->
 %% and the second containing a scan. Both updates should have the mission 
 %% date set correctly.
 mission_loc_dwell_update_checks() ->
-    _MisPkt = sample_mission_packet(),
-    _LocPkt = sample_loc_packet(),
+    MisPkt = sample_mission_packet(),
+    LocPkt = sample_loc_packet(),
+    DwlPkt = minimal_dwell_packet(),
+    _Ret = tgt_stats:accumulate_updates([MisPkt, LocPkt, DwlPkt]),
     [].
 
 sample_mission_packet() ->
@@ -68,7 +70,12 @@ sample_loc_packet() ->
     LocSeg = sample_loc_seg(),
     Gen = sample_packet_generator(),
     Gen([LocSeg]).
-   
+
+minimal_dwell_packet() ->
+    DwellSeg = sample_dwell_seg(),
+    Gen = sample_packet_generator(),
+    Gen([DwellSeg]).
+
 sample_mission_seg() ->
     SegData = sample_mission_seg_data(),
     segment:new(mission, SegData).
@@ -77,12 +84,39 @@ sample_loc_seg() ->
     SegData = sample_loc_seg_data(),
     segment:new(platform_loc, SegData).
 
+sample_dwell_seg() ->
+    SegData = minimal_dwell(),
+    segment:new(dwell, SegData).
+
 sample_mission_seg_data() ->
     mission:new("MISSION 1", "FP 123", fire_scout, "SW 1829", 2018, 9, 9).
 
 sample_loc_seg_data() ->
     % Mons Meg.
     platform_loc:new(34200000, 55.94877, -3.20015, 130, 350, 0, 0).
+
+%% Function to create a sample dwell segment with only the mandatory fields
+% set.
+minimal_dwell() ->
+    % Create a list of fields for the existence mask.
+    F = [existence_mask, revisit_index, dwell_index, last_dwell_of_revisit,
+         target_report_count, dwell_time, sensor_lat, sensor_lon, 
+         sensor_alt, dwell_center_lat, dwell_center_lon, 
+         dwell_range_half_extent, dwell_angle_half_extent],
+
+    % Create an existence mask.
+    EM = exist_mask:new(F), 
+   
+    % Set the fields of the dwell segment.
+    P = [{existence_mask, EM}, {revisit_index, 100}, {dwell_index, 20000}, 
+         {last_dwell_of_revisit, no_additional_dwells}, {target_report_count, 0}, 
+         {dwell_time, 1000000}, {sensor_lat, -45.0}, {sensor_lon, 350},
+         {sensor_alt, -10000}, {dwell_center_lat, -45.2}, 
+         {dwell_center_lon, 350.2}, {dwell_range_half_extent, 255.0}, 
+         {dwell_angle_half_extent, 350}],
+
+    % Use the parameters to construct a new dwell segment.
+    dwell:new(P).
 
 sample_packet_generator() ->
     PL = [{version, {3, 1}}, {nationality, "UK"},
@@ -92,3 +126,5 @@ sample_packet_generator() ->
          {job_id, 16#55667788}],
 
     s4607:packet_generator(PL).
+
+
