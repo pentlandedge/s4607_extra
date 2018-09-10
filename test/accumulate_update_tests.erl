@@ -77,13 +77,15 @@ mission_loc_dwell_update_checks() ->
 %% dwell segments. The three dwells comprise a single revisit so should be
 %% grouped as a single scan.
 mission_loc_three_dwell_update_checks() ->
-    _MisPkt = sample_mission_packet(),
-    _LocPkt = sample_loc_packet(),
+    MisPkt = sample_mission_packet(),
+    LocPkt = sample_loc_packet(),
     Dwell1 = dwell1(),
     Dwell2 = dwell2(),
     Dwell3 = dwell3(),
     Segs = [segment:new(dwell, X) || X <- [Dwell1, Dwell2, Dwell3]],
-    packet_wrap(Segs),
+    DwlPkt = packet_wrap(Segs),
+    Packets = [MisPkt, LocPkt, DwlPkt],
+    [_Update1, _Update2] = tgt_stats:accumulate_updates(Packets),
     [].
 
 sample_mission_packet() ->
