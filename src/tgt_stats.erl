@@ -35,8 +35,11 @@
     grouped_dwells_to_polygon/1,
     fuse_polygons/1]).
 
-%% Accessor functions for manipulating updates.
+%% Accessor functions for manipulating location updates.
 -export([get_last_mission/1, get_loc_data/1]).
+
+%% Accessor functions for scans.
+-export([get_grouped_dwells/1]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Record definitions. 
@@ -499,4 +502,8 @@ get_last_mission(#loc_update{last_mission  = X}) -> X.
 %% @doc Get the location data from the update.
 -spec get_loc_data(loc_update()) -> platform_loc:platform_location_segment().
 get_loc_data(#loc_update{loc_data = X}) -> X.
+
+%% @doc Get the list of grouped dwells in a scan.
+-spec get_grouped_dwells(scan()) -> [dwell:dwell_segment()].
+get_grouped_dwells(#scan{grouped_dwells = X}) -> X.
 
