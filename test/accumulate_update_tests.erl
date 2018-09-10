@@ -61,9 +61,13 @@ mission_loc_dwell_update_checks() ->
     LocPkt = sample_loc_packet(),
     DwlPkt = minimal_dwell_packet(),
     [Update1, Update2] = tgt_stats:accumulate_updates([MisPkt, LocPkt, DwlPkt]),
-    {loc_update, _LocUpdate} = Update1,
+    {loc_update, LocUpdate} = Update1,
     {scan, _Scan} = Update2,
-    [].
+    LMS = tgt_stats:get_last_mission(LocUpdate),
+    Date = mission:get_time(LMS),
+    PlatLoc = tgt_stats:get_loc_data(LocUpdate),
+    Track = platform_loc:get_platform_track(PlatLoc),
+    [?_assertEqual({2018, 9, 9}, Date), ?_assertEqual(350, Track)].
 
 sample_mission_packet() ->
     MisSeg = sample_mission_seg(),
