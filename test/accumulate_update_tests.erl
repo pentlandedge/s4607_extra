@@ -73,7 +73,7 @@ mission_loc_dwell_update_checks() ->
     [?_assertEqual({2018, 9, 9}, Date), ?_assertEqual(350, Track),
      ?_assertEqual(-10000, SensorAlt)].
 
-%% Test a list with five packets containing mission, location, and three 
+%% Test a list with three packets containing mission, location, and three 
 %% dwell segments. The three dwells comprise a single revisit so should be
 %% grouped as a single scan.
 mission_loc_three_dwell_update_checks() ->
@@ -85,8 +85,12 @@ mission_loc_three_dwell_update_checks() ->
     Segs = [segment:new(dwell, X) || X <- [Dwell1, Dwell2, Dwell3]],
     DwlPkt = packet_wrap(Segs),
     Packets = [MisPkt, LocPkt, DwlPkt],
-    [_Update1, _Update2] = tgt_stats:accumulate_updates(Packets),
-    [].
+    [Update1, Update2] = tgt_stats:accumulate_updates(Packets),
+    {loc_update, _LocUpdate} = Update1,
+    {scan, Scan} = Update2,
+    [DS1, _DS2, _DS3] = tgt_stats:get_grouped_dwells(Scan),
+    SensorAlt = dwell:get_sensor_alt(DS1),
+    [?_assertEqual(10000, SensorAlt)].
 
 sample_mission_packet() ->
     MisSeg = sample_mission_seg(),
