@@ -58,7 +58,7 @@ mission_loc_dwell_update_checks() ->
     MisPkt = sample_mission_packet(),
     LocPkt = sample_loc_packet(),
     DwlPkt = minimal_dwell_packet(),
-    _Ret = tgt_stats:accumulate_updates([MisPkt, LocPkt, DwlPkt]),
+    [_Update1, _Update2] = tgt_stats:accumulate_updates([MisPkt, LocPkt, DwlPkt]),
     [].
 
 sample_mission_packet() ->

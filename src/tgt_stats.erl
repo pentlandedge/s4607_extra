@@ -111,6 +111,12 @@ proc_seg2(platform_loc, SegData, {LastMiss, Updates}) ->
     Update = #loc_update{last_mission = LastMiss, loc_data = SegData},
     NewUpdates = [Update|Updates], 
     {LastMiss, NewUpdates};
+proc_seg2(dwell, SegData, {LastMiss, Updates}) -> 
+    Scan = #scan{last_mission = LastMiss, 
+                 last_job_def = none, 
+                 grouped_dwells = [SegData]},
+    NewUpdates = [Scan|Updates], 
+    {LastMiss, NewUpdates};
 proc_seg2(_, _, UpdateAcc) -> 
     UpdateAcc.
 
