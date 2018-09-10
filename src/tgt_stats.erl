@@ -99,7 +99,7 @@ extract(PacketList) when is_list(PacketList) ->
 -spec accumulate_updates(PL::list()) -> [platform_update()].
 accumulate_updates(PacketList) when is_list(PacketList) ->
     Segs = s4607:get_segments(PacketList),
-    {_, Updates} = lists:foldl(fun acc_updates/2, {none, []}, Segs),
+    {_, _, Updates} = lists:foldl(fun acc_updates/2, {none, [], []}, Segs),
     lists:reverse(Updates).
 
 acc_updates(Seg, UpdateAcc) ->
@@ -108,18 +108,24 @@ acc_updates(Seg, UpdateAcc) ->
     T = seg_header:get_segment_type(SH),
     proc_seg2(T, SegData, UpdateAcc).
 
-proc_seg2(mission, SegData, {_, Updates}) ->
-    {SegData, Updates};
-proc_seg2(platform_loc, SegData, {LastMiss, Updates}) -> 
+proc_seg2(mission, SegData, {_, CurrentScan, Updates}) ->
+    {SegData, CurrentScan, Updates};
+proc_seg2(platform_loc, SegData, {LastMiss, CurrentScan, Updates}) -> 
     Update = {loc_update, #loc_update{last_mission = LastMiss, loc_data = SegData}},
     NewUpdates = [Update|Updates], 
-    {LastMiss, NewUpdates};
-proc_seg2(dwell, SegData, {LastMiss, Updates}) -> 
-    Update = {scan, #scan{last_mission = LastMiss, 
-                          last_job_def = none, 
-                          grouped_dwells = [SegData]}},
-    NewUpdates = [Update|Updates], 
-    {LastMiss, NewUpdates};
+    {LastMiss, CurrentScan, NewUpdates};
+proc_seg2(dwell, SegData, {LastMiss, CurrentScan, Updates}) -> 
+    NewCurrent = [SegData|CurrentScan],
+    case dwell:get_last_dwell_of_revisit(SegData) of
+        no_additional_dwells ->
+            Update = {scan, #scan{last_mission = LastMiss, 
+                                  last_job_def = none, 
+                                  grouped_dwells = lists:reverse(NewCurrent)}},
+            NewUpdates = [Update|Updates], 
+            {LastMiss, [], NewUpdates};
+        additional_dwells ->
+            {LastMiss, [SegData|CurrentScan], Updates}
+    end;
 proc_seg2(_, _, UpdateAcc) -> 
     UpdateAcc.
 
