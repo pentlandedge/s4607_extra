@@ -21,7 +21,8 @@
 %% Define a test generator function to run all the tests.
 accumulate_update_test_() ->
     [empty_packet_list_checks(), single_loc_update_checks(), 
-     mission_loc_update_checks(), mission_loc_dwell_update_checks()].
+     mission_loc_update_checks(), mission_loc_dwell_update_checks(),
+     mission_loc_three_dwell_update_checks()].
 
 empty_packet_list_checks() ->
     PacketList = [],
@@ -71,6 +72,17 @@ mission_loc_dwell_update_checks() ->
     SensorAlt = dwell:get_sensor_alt(DS),
     [?_assertEqual({2018, 9, 9}, Date), ?_assertEqual(350, Track),
      ?_assertEqual(-10000, SensorAlt)].
+
+%% Test a list with five packets containing mission, location, and three 
+%% dwell segments. The three dwells comprise a single revisit so should be
+%% grouped as a single scan.
+mission_loc_three_dwell_update_checks() ->
+    _MisPkt = sample_mission_packet(),
+    _LocPkt = sample_loc_packet(),
+    _DwlPkt1 = minimal_dwell_packet(),
+    _DwlPkt2 = minimal_dwell_packet(),
+    _DwlPkt3 = minimal_dwell_packet(),
+    [].
 
 sample_mission_packet() ->
     MisSeg = sample_mission_seg(),
