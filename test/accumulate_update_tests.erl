@@ -79,9 +79,11 @@ mission_loc_dwell_update_checks() ->
 mission_loc_three_dwell_update_checks() ->
     _MisPkt = sample_mission_packet(),
     _LocPkt = sample_loc_packet(),
-    _DwlPkt1 = minimal_dwell_packet(),
-    _DwlPkt2 = minimal_dwell_packet(),
-    _DwlPkt3 = minimal_dwell_packet(),
+    Dwell1 = dwell1(),
+    Dwell2 = dwell2(),
+    Dwell3 = dwell3(),
+    Segs = [segment:new(dwell, X) || X <- [Dwell1, Dwell2, Dwell3]],
+    packet_wrap(Segs),
     [].
 
 sample_mission_packet() ->
@@ -98,6 +100,10 @@ minimal_dwell_packet() ->
     DwellSeg = sample_dwell_seg(),
     Gen = sample_packet_generator(),
     Gen([DwellSeg]).
+
+packet_wrap(SegList) ->
+    Gen = sample_packet_generator(),
+    Gen(SegList).
 
 sample_mission_seg() ->
     SegData = sample_mission_seg_data(),
@@ -140,6 +146,59 @@ minimal_dwell() ->
 
     % Use the parameters to construct a new dwell segment.
     dwell:new(P).
+
+dwell1() ->
+    EM = sample_existence_mask(),
+
+    % Set the fields of the dwell segment.
+    P = [{existence_mask, EM}, {revisit_index, 100}, {dwell_index, 20000}, 
+         {last_dwell_of_revisit, additional_dwells}, {target_report_count, 0}, 
+         {dwell_time, 1000000}, {sensor_lat, -45.0}, {sensor_lon, 350},
+         {sensor_alt, 10000}, {dwell_center_lat, -45.2}, 
+         {dwell_center_lon, 350.2}, {dwell_range_half_extent, 255.0}, 
+         {dwell_angle_half_extent, 350}],
+
+    % Use the parameters to construct a new dwell segment.
+    dwell:new(P).
+
+dwell2() ->
+    EM = sample_existence_mask(),
+
+    % Set the fields of the dwell segment.
+    P = [{existence_mask, EM}, {revisit_index, 100}, {dwell_index, 20000}, 
+         {last_dwell_of_revisit, additional_dwells}, {target_report_count, 0}, 
+         {dwell_time, 1010000}, {sensor_lat, -45.0}, {sensor_lon, 350},
+         {sensor_alt, 10000}, {dwell_center_lat, -45.3}, 
+         {dwell_center_lon, 350.2}, {dwell_range_half_extent, 255.0}, 
+         {dwell_angle_half_extent, 350}],
+
+    % Use the parameters to construct a new dwell segment.
+    dwell:new(P).
+
+dwell3() ->
+    EM = sample_existence_mask(),
+
+    % Set the fields of the dwell segment.
+    P = [{existence_mask, EM}, {revisit_index, 100}, {dwell_index, 20000}, 
+         {last_dwell_of_revisit, no_additional_dwells}, {target_report_count, 0}, 
+         {dwell_time, 1020000}, {sensor_lat, -45.0}, {sensor_lon, 350},
+         {sensor_alt, 10000}, {dwell_center_lat, -45.4}, 
+         {dwell_center_lon, 350.2}, {dwell_range_half_extent, 255.0}, 
+         {dwell_angle_half_extent, 350}],
+
+    % Use the parameters to construct a new dwell segment.
+    dwell:new(P).
+
+sample_existence_mask() ->
+    Fields = dwell_fields(),
+    exist_mask:new(Fields).
+
+dwell_fields() ->
+    % Create a list of fields for the existence mask.
+    [existence_mask, revisit_index, dwell_index, last_dwell_of_revisit, 
+     target_report_count, dwell_time, sensor_lat, sensor_lon, 
+     sensor_alt, dwell_center_lat, dwell_center_lon, dwell_range_half_extent,
+     dwell_angle_half_extent].
 
 sample_packet_generator() ->
     PL = [{version, {3, 1}}, {nationality, "UK"},
