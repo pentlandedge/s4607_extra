@@ -61,7 +61,7 @@
 
 %% Create a generic type which can be extended to contain various types of 
 %% information from the platform.
--type platform_update() :: scan() | loc_update().
+-type platform_update() :: {scan, scan()} | {loc_update, loc_update()}.
 
 -export_type([scan/0, loc_update/0, platform_update/0]).
 
@@ -108,14 +108,14 @@ acc_updates(Seg, UpdateAcc) ->
 proc_seg2(mission, SegData, {_, Updates}) ->
     {SegData, Updates};
 proc_seg2(platform_loc, SegData, {LastMiss, Updates}) -> 
-    Update = #loc_update{last_mission = LastMiss, loc_data = SegData},
+    Update = {loc_update, #loc_update{last_mission = LastMiss, loc_data = SegData}},
     NewUpdates = [Update|Updates], 
     {LastMiss, NewUpdates};
 proc_seg2(dwell, SegData, {LastMiss, Updates}) -> 
-    Scan = #scan{last_mission = LastMiss, 
-                 last_job_def = none, 
-                 grouped_dwells = [SegData]},
-    NewUpdates = [Scan|Updates], 
+    Update = {scan, #scan{last_mission = LastMiss, 
+                          last_job_def = none, 
+                          grouped_dwells = [SegData]}},
+    NewUpdates = [Update|Updates], 
     {LastMiss, NewUpdates};
 proc_seg2(_, _, UpdateAcc) -> 
     UpdateAcc.

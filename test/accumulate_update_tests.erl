@@ -32,8 +32,9 @@ empty_packet_list_checks() ->
 single_loc_update_checks() ->
     LocPkt = sample_loc_packet(),
     [Update] = tgt_stats:accumulate_updates([LocPkt]),
-    LMS = tgt_stats:get_last_mission(Update),
-    PlatLoc = tgt_stats:get_loc_data(Update),
+    {loc_update, LocUpdate} = Update,
+    LMS = tgt_stats:get_last_mission(LocUpdate),
+    PlatLoc = tgt_stats:get_loc_data(LocUpdate),
     Alt = platform_loc:get_alt(PlatLoc),
     Track = platform_loc:get_platform_track(PlatLoc),
     [?_assertEqual(none, LMS), ?_assertEqual(130, Alt), 
@@ -45,7 +46,8 @@ mission_loc_update_checks() ->
     MisPkt = sample_mission_packet(),
     LocPkt = sample_loc_packet(),
     [Update] = tgt_stats:accumulate_updates([MisPkt, LocPkt]),
-    LMS = tgt_stats:get_last_mission(Update),
+    {loc_update, LocUpdate} = Update,
+    LMS = tgt_stats:get_last_mission(LocUpdate),
     Date = mission:get_time(LMS),
     [?_assertEqual({2018, 9, 9}, Date)].
 
