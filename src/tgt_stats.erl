@@ -19,6 +19,7 @@
     new_scan/0,
     extract/1,
     accumulate_updates/1,
+    updates_to_json/1,
     accumulate_scans/1,
     accumulate_scans/3,
     scans_to_geojson/1,
@@ -128,6 +129,18 @@ proc_seg2(dwell, SegData, {LastMiss, CurrentScan, Updates}) ->
     end;
 proc_seg2(_, _, UpdateAcc) -> 
     UpdateAcc.
+
+%% Convert a list of updates to JSON/GeoJSON form.
+-spec updates_to_json(Updates) -> binary() when 
+    Updates :: [platform_update()].
+updates_to_json(Updates) when is_list(Updates) ->
+    PrepList = lists:map(fun update_prep/1, Updates),
+    jsx:encode([{<<"data">>, PrepList}]).
+
+%% Collect the relevant data into a structure suitable for encoding using
+%% the jsx library.
+update_prep(_Update) -> 
+    [].
 
 accumulate_scans(PacketList) when is_list(PacketList) ->
     accumulate_scans(PacketList, #scan{}, []).
