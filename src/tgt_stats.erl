@@ -142,15 +142,13 @@ updates_to_json(Updates) when is_list(Updates) ->
 %% the jsx library.
 update_prep({loc_update, #loc_update{} = LocUpdate}) ->
     % Calculate the dwell time (UTC)and convert the UTC timestamp to a string.
-    _LocUTC = calculate_location_utc_time(LocUpdate),
-    %TimeStr = datetime_to_string(DwellUTC),
-    %TimeUtc = calculate_scan_utc_time_ms(Scan),
-    % Extract the sensor position and dwell area parameters and use these to
-    % calculate the vertices of the dwell polygon.
-    %SensorPos = get_sensor_position_from_scan(Scan),
-    %SensorGeo = sensor_to_geojson(SensorPos, TimeStr, TimeUtc),
-
-    FeatureList = [],
+    LocUTC = calculate_location_utc_time(LocUpdate),
+    TimeStr = datetime_to_string(LocUTC),
+    TimeUtc = calculate_location_utc_time_ms(LocUpdate),
+    % Extract the sensor position.
+    SensorPos = get_sensor_position_from_loc_update(LocUpdate),
+    SensorGeo = sensor_to_geojson(SensorPos, TimeStr, TimeUtc),
+    FeatureList = [SensorGeo],
     % Structure the whole lot for encoding and return to caller.
     [{<<"type">>,<<"FeatureCollection">>},
      {<<"features">>, FeatureList}];
@@ -285,6 +283,25 @@ calculate_scan_utc_time_ms(
     % Convert to UTC (seconds precision).
     tgt_stats:date_ms_to_utc(MissTime, DwellTime).
 
+%% Calculate the platform location UTC time from the mission base and the 
+%% location segment ms offset.
+calculate_location_utc_time_ms(#loc_update{last_mission  = M, loc_data = Loc}) -> 
+
+    % Extract the mission and dwell times.
+    % We may not have received a mission segment, default to 1970 epoch to 
+    % make it clear that the data is invalid. 
+    case M of 
+        none -> 
+            MissTime = {1970, 1, 1};
+        _    ->
+            MissTime = mission:get_time(M)
+    end, 
+
+    LocTime = platform_loc:get_location_time(Loc),
+
+    % Convert to UTC (seconds precision).
+    tgt_stats:date_ms_to_utc(MissTime, LocTime).
+
 %% Extract the sensor position from the dwell dict in standard units
 %% (altitude converted to metres).
 get_sensor_position_from_scan(#scan{grouped_dwells = GD}) ->
@@ -299,6 +316,16 @@ get_sensor_position_from_scan(#scan{grouped_dwells = GD}) ->
     %% Convert parameters to the appopriate units for calculation.
     SensorAltMetres = cm_to_m(SensorAlt),
 
+    {SensorLat, SensorLon, SensorAltMetres}.
+
+%% Get the sensor position in normal units from the platform location.
+get_sensor_position_from_loc_update(#loc_update{loc_data = Loc}) ->
+    SensorLat = platform_loc:get_lat(Loc),
+    SensorLon = platform_loc:get_lon(Loc),
+    SensorAlt = platform_loc:get_alt(Loc),
+
+    %% Convert parameters to the appopriate units for calculation.
+    SensorAltMetres = cm_to_m(SensorAlt),
     {SensorLat, SensorLon, SensorAltMetres}.
 
 %% Convert the sensor location to a form suitable for GeoJSON encoding.

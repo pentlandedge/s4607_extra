@@ -41,7 +41,7 @@ single_loc_update_checks() ->
     PlatLoc = tgt_stats:get_loc_data(LocUpdate),
     Alt = platform_loc:get_alt(PlatLoc),
     Track = platform_loc:get_platform_track(PlatLoc),
-    [?_assertEqual(none, LMS), ?_assertEqual(130, Alt), 
+    [?_assertEqual(none, LMS), ?_assertEqual(13000, Alt), 
      ?_assertEqual(350, Track)].
 
 %% Test a list with two packets: one containing a mission segment and the
@@ -153,7 +153,7 @@ sample_mission_seg_data() ->
 
 sample_loc_seg_data() ->
     % Mons Meg.
-    platform_loc:new(34200000, 55.94877, -3.20015, 130, 350, 0, 0).
+    platform_loc:new(34200000, 55.94877, -3.20015, 13000, 350, 0, 0).
 
 %% Function to create a sample dwell segment with only the mandatory fields
 % set.
