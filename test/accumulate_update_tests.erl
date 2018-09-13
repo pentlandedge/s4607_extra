@@ -25,7 +25,7 @@ accumulate_update_test_() ->
     [empty_packet_list_checks(), single_loc_update_checks(), 
      mission_loc_update_checks(), mission_loc_dwell_update_checks(),
      mission_loc_three_dwell_update_checks(), json_checks1(),
-     json_checks2()].
+     json_checks2(), json_checks3()].
 
 empty_packet_list_checks() ->
     PacketList = [],
@@ -80,6 +80,16 @@ mission_loc_dwell_update_checks() ->
 %% dwell segments. The three dwells comprise a single revisit so should be
 %% grouped as a single scan.
 mission_loc_three_dwell_update_checks() ->
+    Packets = sample_packets(), 
+    [Update1, Update2] = tgt_stats:accumulate_updates(Packets),
+    {loc_update, _LocUpdate} = Update1,
+    {scan, Scan} = Update2,
+    [DS1, _DS2, _DS3] = tgt_stats:get_grouped_dwells(Scan),
+    SensorAlt = dwell:get_sensor_alt(DS1),
+    [?_assertEqual(10000, SensorAlt)].
+
+%% Mix of packets (mission, location and dwell).
+sample_packets() ->
     MisPkt = sample_mission_packet(),
     LocPkt = sample_loc_packet(),
     Dwell1 = dwell1(),
@@ -87,13 +97,7 @@ mission_loc_three_dwell_update_checks() ->
     Dwell3 = dwell3(),
     Segs = [segment:new(dwell, X) || X <- [Dwell1, Dwell2, Dwell3]],
     DwlPkt = packet_wrap(Segs),
-    Packets = [MisPkt, LocPkt, DwlPkt],
-    [Update1, Update2] = tgt_stats:accumulate_updates(Packets),
-    {loc_update, _LocUpdate} = Update1,
-    {scan, Scan} = Update2,
-    [DS1, _DS2, _DS3] = tgt_stats:get_grouped_dwells(Scan),
-    SensorAlt = dwell:get_sensor_alt(DS1),
-    [?_assertEqual(10000, SensorAlt)].
+    [MisPkt, LocPkt, DwlPkt].
 
 %% Simple tests of the conversion from updates -> JSON.
 json_checks1() ->
@@ -111,6 +115,17 @@ json_checks1() ->
 json_checks2() ->
     LocPkt = sample_loc_packet(),
     Updates = tgt_stats:accumulate_updates([LocPkt]),
+    JSON = tgt_stats:updates_to_json(Updates),
+    Decode = jsx:decode(JSON),
+    [{Tag, _Data}] = Decode,
+    [?_assertEqual(true, is_binary(JSON)),
+     ?_assertEqual(<<"data">>, Tag)].
+
+%% Check that a conversion of a list of updates comprising a mission, platform
+%% location and three dwell segments.
+json_checks3() ->
+    Packets = sample_packets(), 
+    Updates = tgt_stats:accumulate_updates(Packets),
     JSON = tgt_stats:updates_to_json(Updates),
     Decode = jsx:decode(JSON),
     [{Tag, _Data}] = Decode,
