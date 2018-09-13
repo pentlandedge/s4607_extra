@@ -152,6 +152,8 @@ update_prep({loc_update, #loc_update{} = LocUpdate}) ->
     % Structure the whole lot for encoding and return to caller.
     [{<<"type">>,<<"FeatureCollection">>},
      {<<"features">>, FeatureList}];
+update_prep({scan, #scan{} = Scan}) -> 
+    scan_prep(Scan);
 update_prep(_Update) -> 
     %io:format("Update ~p~n", [_Update]),
     [].

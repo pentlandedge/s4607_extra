@@ -18,7 +18,7 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
--export([sample_loc_packet/0]).
+-export([sample_loc_packet/0, sample_packets/0]).
 
 %% Define a test generator function to run all the tests.
 accumulate_update_test_() ->
@@ -88,17 +88,6 @@ mission_loc_three_dwell_update_checks() ->
     SensorAlt = dwell:get_sensor_alt(DS1),
     [?_assertEqual(10000, SensorAlt)].
 
-%% Mix of packets (mission, location and dwell).
-sample_packets() ->
-    MisPkt = sample_mission_packet(),
-    LocPkt = sample_loc_packet(),
-    Dwell1 = dwell1(),
-    Dwell2 = dwell2(),
-    Dwell3 = dwell3(),
-    Segs = [segment:new(dwell, X) || X <- [Dwell1, Dwell2, Dwell3]],
-    DwlPkt = packet_wrap(Segs),
-    [MisPkt, LocPkt, DwlPkt].
-
 %% Simple tests of the conversion from updates -> JSON.
 json_checks1() ->
     Updates = [],
@@ -141,6 +130,17 @@ sample_loc_packet() ->
     LocSeg = sample_loc_seg(),
     Gen = sample_packet_generator(),
     Gen([LocSeg]).
+
+%% Mix of packets (mission, location and dwell).
+sample_packets() ->
+    MisPkt = sample_mission_packet(),
+    LocPkt = sample_loc_packet(),
+    Dwell1 = dwell1(),
+    Dwell2 = dwell2(),
+    Dwell3 = dwell3(),
+    Segs = [segment:new(dwell, X) || X <- [Dwell1, Dwell2, Dwell3]],
+    DwlPkt = packet_wrap(Segs),
+    [MisPkt, LocPkt, DwlPkt].
 
 minimal_dwell_packet() ->
     DwellSeg = sample_dwell_seg(),
