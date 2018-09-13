@@ -25,6 +25,7 @@
     scans_to_geojson/1,
     scan_prep/1,
     calculate_scan_start_utc_time/1,
+    calculate_location_utc_time/1,
     get_targets_from_scan/1,
     dwell_area_to_polygon/2,
     datetime_to_string/1,
@@ -139,8 +140,16 @@ updates_to_json(Updates) when is_list(Updates) ->
 
 %% Collect the relevant data into a structure suitable for encoding using
 %% the jsx library.
-update_prep({loc_update, #loc_update{}}) ->
-    %io:format("Location update ~n"),
+update_prep({loc_update, #loc_update{} = LocUpdate}) ->
+    % Calculate the dwell time (UTC)and convert the UTC timestamp to a string.
+    _LocUTC = calculate_location_utc_time(LocUpdate),
+    %TimeStr = datetime_to_string(DwellUTC),
+    %TimeUtc = calculate_scan_utc_time_ms(Scan),
+    % Extract the sensor position and dwell area parameters and use these to
+    % calculate the vertices of the dwell polygon.
+    %SensorPos = get_sensor_position_from_scan(Scan),
+    %SensorGeo = sensor_to_geojson(SensorPos, TimeStr, TimeUtc),
+
     FeatureList = [],
     % Structure the whole lot for encoding and return to caller.
     [{<<"type">>,<<"FeatureCollection">>},
@@ -240,6 +249,24 @@ calculate_scan_start_utc_time(
     % Convert to UTC (seconds precision).
     tgt_stats:date_ms_to_datetime(MissTime, DwellTime).
 
+%% Calculate the platform location UTC time from the mission base and the 
+%% location segment ms offset.
+calculate_location_utc_time(#loc_update{last_mission  = M, loc_data = Loc}) -> 
+
+    % Extract the mission and dwell times.
+    % We may not have received a mission segment, default to 1970 epoch to 
+    % make it clear that the data is invalid. 
+    case M of 
+        none -> 
+            MissTime = {1970, 1, 1};
+        _    ->
+            MissTime = mission:get_time(M)
+    end, 
+
+    LocTime = platform_loc:get_location_time(Loc),
+
+    % Convert to UTC (seconds precision).
+    tgt_stats:date_ms_to_datetime(MissTime, LocTime).
 
 %% Calculate the dwell UTC time from the mission base and dwell offset.
 calculate_scan_utc_time_ms(
