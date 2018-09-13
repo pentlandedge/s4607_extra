@@ -22,7 +22,7 @@
 accumulate_update_test_() ->
     [empty_packet_list_checks(), single_loc_update_checks(), 
      mission_loc_update_checks(), mission_loc_dwell_update_checks(),
-     mission_loc_three_dwell_update_checks()].
+     mission_loc_three_dwell_update_checks(), json_checks()].
 
 empty_packet_list_checks() ->
     PacketList = [],
@@ -91,6 +91,18 @@ mission_loc_three_dwell_update_checks() ->
     [DS1, _DS2, _DS3] = tgt_stats:get_grouped_dwells(Scan),
     SensorAlt = dwell:get_sensor_alt(DS1),
     [?_assertEqual(10000, SensorAlt)].
+
+%% Simple tests of the conversion from updates -> JSON.
+json_checks() ->
+    Updates = [],
+    JSON = tgt_stats:updates_to_json(Updates),
+    % Expect to get something of the form [{<<"data">>,[]}]
+    Decode = jsx:decode(JSON),
+    [{Tag, Data}] = Decode,
+    [?_assertEqual(true, is_binary(JSON)),
+     ?_assertEqual(<<"{\"data\":[]}">>, JSON),
+     ?_assertEqual(<<"data">>, Tag),
+     ?_assertEqual([], Data)].
 
 sample_mission_packet() ->
     MisSeg = sample_mission_seg(),
