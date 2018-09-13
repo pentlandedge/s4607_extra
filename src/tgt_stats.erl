@@ -139,7 +139,14 @@ updates_to_json(Updates) when is_list(Updates) ->
 
 %% Collect the relevant data into a structure suitable for encoding using
 %% the jsx library.
+update_prep({loc_update, #loc_update{}}) ->
+    %io:format("Location update ~n"),
+    FeatureList = [],
+    % Structure the whole lot for encoding and return to caller.
+    [{<<"type">>,<<"FeatureCollection">>},
+     {<<"features">>, FeatureList}];
 update_prep(_Update) -> 
+    %io:format("Update ~p~n", [_Update]),
     [].
 
 accumulate_scans(PacketList) when is_list(PacketList) ->

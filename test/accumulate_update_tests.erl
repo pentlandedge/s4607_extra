@@ -18,6 +18,8 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
+-export([sample_loc_packet/0]).
+
 %% Define a test generator function to run all the tests.
 accumulate_update_test_() ->
     [empty_packet_list_checks(), single_loc_update_checks(), 
