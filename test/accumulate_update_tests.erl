@@ -22,7 +22,8 @@
 accumulate_update_test_() ->
     [empty_packet_list_checks(), single_loc_update_checks(), 
      mission_loc_update_checks(), mission_loc_dwell_update_checks(),
-     mission_loc_three_dwell_update_checks(), json_checks()].
+     mission_loc_three_dwell_update_checks(), json_checks1(),
+     json_checks2()].
 
 empty_packet_list_checks() ->
     PacketList = [],
@@ -93,7 +94,7 @@ mission_loc_three_dwell_update_checks() ->
     [?_assertEqual(10000, SensorAlt)].
 
 %% Simple tests of the conversion from updates -> JSON.
-json_checks() ->
+json_checks1() ->
     Updates = [],
     JSON = tgt_stats:updates_to_json(Updates),
     % Expect to get something of the form [{<<"data">>,[]}]
@@ -103,6 +104,16 @@ json_checks() ->
      ?_assertEqual(<<"{\"data\":[]}">>, JSON),
      ?_assertEqual(<<"data">>, Tag),
      ?_assertEqual([], Data)].
+
+%% Check of a conversion of a single platform location update to JSON.
+json_checks2() ->
+    LocPkt = sample_loc_packet(),
+    Updates = tgt_stats:accumulate_updates([LocPkt]),
+    JSON = tgt_stats:updates_to_json(Updates),
+    Decode = jsx:decode(JSON),
+    [{Tag, _Data}] = Decode,
+    [?_assertEqual(true, is_binary(JSON)),
+     ?_assertEqual(<<"data">>, Tag)].
 
 sample_mission_packet() ->
     MisSeg = sample_mission_seg(),
