@@ -24,6 +24,7 @@
     accumulate_scans/3,
     scans_to_geojson/1,
     scan_prep/1,
+    calculate_update_utc_time/1,
     calculate_scan_start_utc_time/1,
     calculate_location_utc_time/1,
     get_targets_from_scan/1,
@@ -228,6 +229,12 @@ scan_prep(#scan{grouped_dwells = GD} = Scan) ->
     % Structure the whole lot for encoding and return to caller.
     [{<<"type">>,<<"FeatureCollection">>},
      {<<"features">>, FeatureList}].
+
+%% @doc Calculate the UTC time of the update.
+calculate_update_utc_time({scan, Scan}) ->
+    calculate_scan_start_utc_time(Scan);
+calculate_update_utc_time({loc_update, LocUpdate}) ->
+    calculate_location_utc_time(LocUpdate).
 
 %% Calculate the scan start UTC time from the mission base and dwell offset.
 calculate_scan_start_utc_time( 
