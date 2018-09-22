@@ -25,7 +25,7 @@ accumulate_update_test_() ->
     [empty_packet_list_checks(), single_loc_update_checks(), 
      mission_loc_update_checks(), mission_loc_dwell_update_checks(),
      mission_loc_three_dwell_update_checks(), json_checks1(),
-     json_checks2(), json_checks3()].
+     json_checks2(), json_checks3(), update_utc_checks()].
 
 empty_packet_list_checks() ->
     PacketList = [],
@@ -120,6 +120,14 @@ json_checks3() ->
     [{Tag, _Data}] = Decode,
     [?_assertEqual(true, is_binary(JSON)),
      ?_assertEqual(<<"data">>, Tag)].
+
+%% Check that the datetime can be extracted from an update.
+update_utc_checks() ->
+    MisPkt = sample_mission_packet(),
+    LocPkt = sample_loc_packet(),
+    [Update] = tgt_stats:accumulate_updates([MisPkt, LocPkt]),
+    UTC = tgt_stats:calculate_update_utc_time(Update),
+    [?_assertEqual({{2018,9,9},{9,30,0}}, UTC)].
 
 sample_mission_packet() ->
     MisSeg = sample_mission_seg(),
