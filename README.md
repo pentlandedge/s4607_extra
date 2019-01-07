@@ -1,6 +1,8 @@
 # s4607_extra
 Extra utilities for working with Stanag 4607 data that don't really belong in the core library (s4607). As an example, a useful query function to extract a particular subset of fields from the hierarchical packet structure would belong here not in the core. 
 
+NOTE: the library has recently moved from using rebar to the newer rebar3 build tool. The version 1.0.0 release is the last version using rebar.
+
 ## Prerequisites
 It is necessary to have Erlang installed, and the compiler erlc available on the path. The rebar3 tool is used to control the build process, so it is necessary to have this installed and on the path too. 
 
