@@ -26,7 +26,7 @@ accumulate_update_test_() ->
      mission_loc_update_checks(), mission_loc_dwell_update_checks(),
      mission_loc_three_dwell_update_checks(), json_checks1(),
      json_checks2(), json_checks3(), update_utc_checks1(), 
-     update_utc_checks2()].
+     update_utc_checks2(), decode_checks()].
 
 empty_packet_list_checks() ->
     PacketList = [],
@@ -136,6 +136,17 @@ update_utc_checks2() ->
     UTC = tgt_stats:calculate_update_utc_time(Update),
     [?_assertEqual({{2018,9,9},{0,16,40}}, UTC)].
 
+%% Check that JSON can be decoded back to something resembling the original
+%% input.
+decode_checks() ->
+    LocPkt = sample_loc_packet(),
+    Updates = tgt_stats:accumulate_updates([LocPkt]),
+    JSON = tgt_stats:updates_to_json(Updates),
+    Updates2 = tgt_stats:json_to_updates(JSON),
+    [?_assertEqual(1, length(Updates)),
+     ?_assertEqual(1, length(Updates2))].
+
+%% Convenience routines for constructing sample packets.
 sample_mission_packet() ->
     MisSeg = sample_mission_seg(),
     Gen = sample_packet_generator(),
