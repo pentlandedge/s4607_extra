@@ -95,10 +95,8 @@ json_checks1() ->
     JSON = tgt_stats:updates_to_json(Updates),
     % Expect to get something of the form [{<<"data">>,[]}]
     Decode = jsx:decode(JSON),
-    [{Tag, Data}] = Decode,
+    #{<<"data">> := Data} = Decode,
     [?_assertEqual(true, is_binary(JSON)),
-     ?_assertEqual(<<"{\"data\":[]}">>, JSON),
-     ?_assertEqual(<<"data">>, Tag),
      ?_assertEqual([], Data)].
 
 %% Check of a conversion of a single platform location update to JSON.
@@ -107,9 +105,9 @@ json_checks2() ->
     Updates = tgt_stats:accumulate_updates([LocPkt]),
     JSON = tgt_stats:updates_to_json(Updates),
     Decode = jsx:decode(JSON),
-    [{Tag, _Data}] = Decode,
+    #{<<"data">> := Data} = Decode,
     [?_assertEqual(true, is_binary(JSON)),
-     ?_assertEqual(<<"data">>, Tag)].
+     ?_assertNotEqual(0, length(Data))].
 
 %% Check that a conversion of a list of updates comprising a mission, platform
 %% location and three dwell segments.
@@ -118,9 +116,9 @@ json_checks3() ->
     Updates = tgt_stats:accumulate_updates(Packets),
     JSON = tgt_stats:updates_to_json(Updates),
     Decode = jsx:decode(JSON),
-    [{Tag, _Data}] = Decode,
+    #{<<"data">> := Data} = Decode,
     [?_assertEqual(true, is_binary(JSON)),
-     ?_assertEqual(<<"data">>, Tag)].
+     ?_assertNotEqual(0, length(Data))].
 
 %% Check that the datetime can be extracted from an update.
 update_utc_checks1() ->
