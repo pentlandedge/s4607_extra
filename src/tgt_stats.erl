@@ -160,7 +160,7 @@ update_prep(_Update) ->
     %io:format("Update ~p~n", [_Update]),
     [].
 
--spec geojson_to_feature_collections(JSON::binary()) -> proplists:proplist().
+-spec geojson_to_feature_collections(JSON::binary()) -> [proplists:proplist()].
 geojson_to_feature_collections(JSON) ->
     Data = jsx:decode(JSON, [{return_maps, false}]),
     proplists:get_value(<<"data">>, Data, []).
