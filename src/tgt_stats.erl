@@ -20,7 +20,7 @@
     extract/1,
     accumulate_updates/1,
     updates_to_json/1,
-    json_to_updates/1,
+    geojson_to_feature_collections/1,
     accumulate_scans/1,
     accumulate_scans/3,
     scans_to_geojson/1,
@@ -160,13 +160,9 @@ update_prep(_Update) ->
     %io:format("Update ~p~n", [_Update]),
     [].
 
-json_to_updates(JSON) ->
-    Props = jsx:decode(JSON, [{return_maps, false}]),
-    proplist_to_updates(Props).
-
-%% Convert a proplist back to an update. Designed to reverse update_to_proplist/1. 
-proplist_to_updates(_Props) ->
-    [#loc_update{}].
+-spec geojson_to_feature_collections(JSON::binary()) -> proplists:proplist().
+geojson_to_feature_collections(JSON) ->
+    jsx:decode(JSON, [{return_maps, false}]).
 
 accumulate_scans(PacketList) when is_list(PacketList) ->
     accumulate_scans(PacketList, #scan{}, []).

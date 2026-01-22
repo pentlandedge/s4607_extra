@@ -136,15 +136,14 @@ update_utc_checks2() ->
     UTC = tgt_stats:calculate_update_utc_time(Update),
     [?_assertEqual({{2018,9,9},{0,16,40}}, UTC)].
 
-%% Check that JSON can be decoded back to something resembling the original
-%% input.
+%% Check that JSON can be decoded back to a structured form.
 decode_checks() ->
     LocPkt = sample_loc_packet(),
     Updates = tgt_stats:accumulate_updates([LocPkt]),
     JSON = tgt_stats:updates_to_json(Updates),
-    Updates2 = tgt_stats:json_to_updates(JSON),
+    FC = tgt_stats:geojson_to_feature_collections(JSON),
     [?_assertEqual(1, length(Updates)),
-     ?_assertEqual(1, length(Updates2))].
+     ?_assertEqual(1, length(FC))].
 
 %% Convenience routines for constructing sample packets.
 sample_mission_packet() ->
