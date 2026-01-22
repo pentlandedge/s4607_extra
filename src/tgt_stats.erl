@@ -162,7 +162,8 @@ update_prep(_Update) ->
 
 -spec geojson_to_feature_collections(JSON::binary()) -> proplists:proplist().
 geojson_to_feature_collections(JSON) ->
-    jsx:decode(JSON, [{return_maps, false}]).
+    Data = jsx:decode(JSON, [{return_maps, false}]),
+    proplists:get_value(<<"data">>, Data, []).
 
 accumulate_scans(PacketList) when is_list(PacketList) ->
     accumulate_scans(PacketList, #scan{}, []).
