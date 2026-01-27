@@ -1,6 +1,6 @@
 [{<<"jsx">>,
   {git,"https://github.com/talentdeficit/jsx.git",
-       {ref,"1d3407aa9752430ec0a06111ac1b046ffafdca22"}},
+       {ref,"bb9b3e570a7efe331eed0900c3a5188043a850d7"}},
   0},
  {<<"s4607">>,
   {git,"https://github.com/pentlandedge/s4607.git",
